@@ -54,3 +54,28 @@ def matDesign (dataSet,order,indVariables):
         
 
     return matX
+def MSE(data, model):
+    """
+    Calculates the Mean Squared Error if both data and model are vectos
+    Calculates Variance if data is vector and model is the mean value of the data
+    """
+    n = np.shape(data)[0]
+    res = np.array(data - model)
+    return 1.0/n *res.dot(res)
+
+def R2(data, model):
+    """
+    calculate the R2 score function
+    """
+    numerator = MSE(data, model)
+    denominator = MSE(data, np.mean(data))
+    return 1 - numerator/denominator
+
+def generate_sample(n, mean = 0, var = 1):
+    """
+    Generates (n,3) samples [x,y,z], where x,y are uniform random numbers [0,1) 
+    and z = f(x,y) + eps with f the Franke function and eps normal distributed with mean and var
+    """
+    x, y = rand(2,n)
+    z = FrankeFunction(x,y) + np.sqrt(var)*randn(n) + mean
+    return np.array([x, y, z])
