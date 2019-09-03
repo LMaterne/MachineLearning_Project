@@ -101,9 +101,9 @@ def evaluate_model(data, design, par, par_var, regtype, lam =0, filepath =''):
     
     #write to file
     try:
-        f = open(filepath +"pol_order"+str(p)+ "/"+ regtype+".txt",'w+')
+        f = open(filepath + "/"+ regtype+".txt",'w+')
     except:
-        subprocess.call(["mkdir", filepath + "pol_order" + str(p)])
+        subprocess.call(["mkdir", filepath ])
         f = open(filepath +"pol_order"+str(p)+ "/"+ regtype+".txt",'w+')
     f.write("    Perfomance of %s regression with order %i \n:" %(regtype, p))
     if regtype != 'OLS':

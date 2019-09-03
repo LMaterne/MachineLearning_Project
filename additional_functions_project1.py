@@ -1,5 +1,6 @@
 #additional functions
 import numpy as np
+import subprocess
 import matplotlib.pyplot as plt 
 
 def FrankeFunction(x,y):
