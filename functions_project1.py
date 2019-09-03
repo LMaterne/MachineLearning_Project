@@ -90,7 +90,7 @@ def MSE(data, model):
     """
     n = np.shape(data)[0]
     res = np.array(data - model)
-    return 1.0/n *res.dot(res)
+    return 1.0/n *res.T.dot(res)
 
 def R2(data, model):
     """
