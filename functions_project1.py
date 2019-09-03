@@ -5,6 +5,7 @@ def matDesign (dataSet,order,indVariables):
     the inputs are :dataSet, the n datapoints, x and y data in a nx2 matrix
                     order, is the order of the coefficients, 
                     indVariables, the number of independant variables
+
                     
     i.e if order = 3 and indVariables = 1, then the number of coefficients THIS function will create is 4. (1 x x**2 x**3)
     or  if order = 2 and indVariables = 2, then the number of coefficients THIS function will create is 6. (1 x y xy x**2 y**2) 
@@ -28,6 +29,7 @@ def matDesign (dataSet,order,indVariables):
         matX = np.zeros((n,num_coeff))
         i = 0 #counter
         while i < num_coeff:
+
             matX[:,i] = (dataSet[i])**i
             i=i+1
         
@@ -72,6 +74,7 @@ def matDesign (dataSet,order,indVariables):
 
     
     return matX 
+
 
 def linReg(data, design):
     """
