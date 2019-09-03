@@ -1,6 +1,8 @@
 import numpy as np 
 import matplotlib.pyplot as plt 
 import subprocess
+from sklearn.model_selection import train_test_split
+
 
 from additional_functions_project1 import *
 
@@ -83,7 +85,7 @@ def ridgeReg(data, design, lam = 0.1):
     par = inverse.dot(design.T).dot(data)
     return par, var
 
-def evaluate_model(data, design, par, par_var, regtype, lam =0, filepath =''):
+def evaluate_model(data, design, par, par_var, regtype, lam =0, filepath ='', split = 0):
     """
     -calculates the MSE
     -calcualtes the variance and bias of the modell
@@ -108,6 +110,8 @@ def evaluate_model(data, design, par, par_var, regtype, lam =0, filepath =''):
     f.write("    Perfomance of %s regression with order %i \n:" %(regtype, p))
     if regtype != 'OLS':
         f.write("Regularization parameter lambda = %.4f\n" %lam)
+    if split != 0:
+        f.write("Validation on %.2f fraction of data set \n"%split)
     f.write("MSE = %.4f \t R2 = %.4f \t Bias(model)=%.4f \t Variance(model) =%.4f \n" %(mse, r2, bias, variance))
     f.write("Parameter Information:\n")
     for i in range(p):
@@ -115,7 +119,28 @@ def evaluate_model(data, design, par, par_var, regtype, lam =0, filepath =''):
     f.close()
     return mse, r2, bias, variance
 
-def run_fit(data, design, regtype, lam = 0.1, filepath = ''):
+def run_fit_split(data, design, regtype, lam = 0.1, test_size= 1./3., filepath = ''):
+    """
+    perfomes the fit of the data to the model given as design matrix
+    but first splitting it into a test and training set with fraction of data points
+    going to the test set given by test_size
+    suportet regtypes are 'OLS', 'RIDGE'
+    lam is ignored for OLS
+    returns a dictonary with all necessary information
+    """
+    design_train, design_test, data_train, data_test = train_test_split(design, data, test_size = test_size)
+    if regtype == 'OLS':
+        par, var = linReg(data_train, design_train)
+    if regtype == 'RIDGE':
+        par, var = ridgeReg(data_train, design_train, lam)
+
+    mse, r2, bias, variance = evaluate_model(data_test, design_test, par, var,
+                                                 regtype, lam, filepath, split= test_size )
+    f = {'par' : par, 'par_var' : var, 'MSE': mse, 'R2' : r2, 
+         'Model_Bias' : bias, 'Model_Variance' : variance, 'lambda' : lam }
+    return f
+
+    def run_fit(data, design, regtype, lam = 0.1, filepath = ''):
     """
     perfomes the fit of the data to the model given as design matrix
     suportet regtypes are 'OLS', 'RIDGE'

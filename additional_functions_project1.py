@@ -35,7 +35,7 @@ def R2(data, model):
     """
     numerator = MSE(data, model)
     denominator = MSE(data, np.mean(data))
-    return 1 - numerator/denominator
+    return 1.0 - numerator/denominator
 
 def variance_bias_tradeoff(comp, MSE, Var, Bias, filename, filepath = 'results', font = 18, title=None):
     try:
