@@ -1,4 +1,8 @@
 import numpy as np 
+import matplotlib.pyplot as plt 
+import subprocess
+
+from additional_functions_project1 import *
 
 def matDesign (dataSet,order,indVariables):
     '''This is a function to set up the design matrix
@@ -59,52 +63,73 @@ def matDesign (dataSet,order,indVariables):
 def linReg(data, design):
     """
     returns the estimated parameters of an OLS
+    outputs variance as the diagonal entries of (X^TX)^-1
     """
     inverse = np.linalg.inv(design.T.dot(design))
+    var = np.diag(inverse)
     par = inverse.dot(design.T).dot(data)
-    return par
+    return par, var
 
 def ridgeReg(data, design, lam = 0.1):
     """
     returns the estimated parameters of an Ridge Regression with 
     regularization parameter lambda
+    outputs variance as the diagonal entries of (X^TX- lam I)^-1
     """
     #creating identity matrix weighted with lam
     diag = lam * np.ones(design.shape[1])
     inverse = np.linalg.inv(design.T.dot(design) + np.diag(diag))
+    var = diag(inverse)
     par = inverse.dot(design.T).dot(data)
-    return par
+    return par, var
 
-#additional functions
-def FrankeFunction(x,y):
-    term1 = 0.75*np.exp(-(0.25*(9*x-2)**2) - 0.25*((9*y-2)**2))
-    term2 = 0.75*np.exp(-((9*x+1)**2)/49.0 - 0.1*(9*y+1))
-    term3 = 0.5*np.exp(-(9*x-7)**2/4.0 - 0.25*((9*y-3)**2))
-    term4 = -0.2*np.exp(-(9*x-4)**2 - (9*y-7)**2)
-    return term1 + term2 + term3 + term4
+def evaluate_model(data, design, par, par_var, regtype, lam =0, filepath =''):
+    """
+    -calculates the MSE
+    -calcualtes the variance and bias of the modell
+    -outputs model information and saves it to filepath
+    """
+    p = par.shape[0]
 
-def MSE(data, model):
-    """
-    Calculates the Mean Squared Error if both data and model are vectos
-    Calculates Variance if data is vector and model is the mean value of the data
-    """
-    n = np.shape(data)[0]
-    res = np.array(data - model)
-    return 1.0/n *res.T.dot(res)
+    model = design.dot(par)
+    expect_model = np.mean(model)
 
-def R2(data, model):
-    """
-    calculate the R2 score function
-    """
-    numerator = MSE(data, model)
-    denominator = MSE(data, np.mean(data))
-    return 1 - numerator/denominator
+    mse = MSE(data, model)
+    bias = MSE( data, expect_model)
+    variance = MSE(model, expect_model)
+    r2 = R2(data, model)
+    
+    #write to file
+    try:
+        f = open(filepath +"pol_order"+str(p)+ "/"+ regtype+".txt",'w+')
+    except:
+        subprocess.call(["mkdir", filepath + "pol_order" + str(p)])
+        f = open(filepath +"pol_order"+str(p)+ "/"+ regtype+".txt",'w+')
+    f.write("    Perfomance of %s regression with order %i \n:" %(regtype, p))
+    if regtype != 'OLS':
+        f.write("Regularization parameter lambda = %.4f\n" %lam)
+    f.write("MSE = %.4f \t R2 = %.4f \t Bias(model)=%.4f \t Variance(model) =%.4f \n" %(mse, r2, bias, variance))
+    f.write("Parameter Information:\n")
+    for i in range(p):
+        f.write("beta_%i=%.4f +- %.4f\n" %(i, par[i],np.sqrt(par_var[i])))
+    f.close()
+    return mse, r2, bias, variance
 
-def generate_sample(n, mean = 0, var = 1):
+def run_fit(data, design, regtype, lam = 0.1, filepath = ''):
     """
-    Generates (n,3) samples [x,y,z], where x,y are uniform random numbers [0,1) 
-    and z = f(x,y) + eps with f the Franke function and eps normal distributed with mean and var
+    perfomes the fit of the data to the model given as design matrix
+    suportet regtypes are 'OLS', 'RIDGE'
+    lam is ignored for OLS
+    returns a dictonary with all necessary information
     """
-    x, y = np.random.rand(2,n)
-    z = FrankeFunction(x,y) + np.sqrt(var)*np.random.randn(n) + mean
-    return np.array([x, y, z])
+    if regtype == 'OLS':
+        par, var = linReg(data, design)
+    if regtype == 'RIDGE':
+        par, var = ridgeReg(data, design, lam)
+
+    mse, r2, bias, variance = evaluate_model(data, design, par, var,
+                                                 regtype, lam, filepath )
+    f = {'par' : par, 'par_var' : var, 'MSE': mse, 'R2' : r2, 
+         'Model_Bias' : bias, 'Model_Variance' : variance, 'lambda' : lam }
+    return f
+
