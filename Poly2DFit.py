@@ -171,7 +171,7 @@ class Poly2DFit:
     def store_information(self, filepath, filename):
     
         try:
-            f = open(filepath + "/"+ regtype + ad_lam + ".txt",'w+')
+            f = open(filepath + "/"+ filename ".txt",'w+')
         except:
             subprocess.call(["mkdir", "-p", filepath ])
             f = open(filepath + "/"+ filename + ".txt",'w+')
