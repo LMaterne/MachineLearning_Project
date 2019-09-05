@@ -2,6 +2,11 @@ import Poly2DFit
 import numpy as np 
 import pytest
 
+"""
+run pytest command from comandline 
+automatically executes all test_*.py or *_test.py files
+"""
+
 np.random.seed(2019)
 
 def test_Poly2DFit():
