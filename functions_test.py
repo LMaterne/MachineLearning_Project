@@ -1,34 +1,40 @@
-from functions_project1 import matDesign, linReg, MSE, R2
-import unittest
-from numpy.random import randn, rand
+import Poly2DFit 
 import numpy as np 
+import pytest
 
-np.random.seed(101)
+np.random.seed(2019)
 
-class TestMethodes(unittest.TestCase):
+def test_Poly2DFit():
     """
-    testing critical functions of functions.py
+    testing the functionallity of Poly2DFit by try to reconstruct a 
+    given parameter example for a polynomial of degree 3 i.e 10 random parameters
+    for x,y in [-1, 1]
     """
-    def test_linReg(self):
-        x,y = rand(2,100)
-        design = matDesign([x,y], 2, 2)
-        ideal_par = np.array([4, 5, -3, 1, 2, -1] )
-        data = design.dot(ideal_par) + randn(100)
-        fit_res = linReg(data, design)
-        res = np.abs(fit_res - ideal_par)
-        self.assertAlmostEqual(res.max(),0)
-    
-    def test_MSE(self):
-        x = rand(10000)
-        y = 5*x +4
-        data = 5*x +4 + randn(10000)
-        mse = MSE(data, y)
-        self.assertAlmostEqual(mse,1)
-    def test_MSE_as_Var(self):
-        data = randn(10000)
-        mse = MSE(data, data.mean())
-        self.assertAlmostEqual(mse,1)
-    
+    par  = 20*np.random.randn(10) + 2
+    x,y = 2 * np.random.rand(2,100)  - 1 
+    create_fit = Poly2DFit.Poly2DFit()
+    #asign data 
+    create_fit.x = x
+    create_fit.y = y
+    create_fit.order = 3
+    design = create_fit.matDesign()
+    #assigning data to fit to with X.beta
+    data = design.dot(par)
+    #free memory and test with new class instance
+    del create_fit 
+    test_fit = Poly2DFit.Poly2DFit()
+    test_fit.givenData(x, y, data)
 
-if __name__ == '__main__':
-    unittest.main()
+    #test OLS###########################################################################
+    test_par, _ = test_fit.run_fit(3, 'OLS')
+    res = np.abs(test_par -par).max()
+    #test assertion to precison of 10^-9
+    assert res == pytest.approx( 0 ,  abs = 1e-9 ) 
+    
+    #test RIDGE#########################################################################
+    #only accurate for lam = 0 ?
+    test_par, _ = test_fit.run_fit(3, 'RIDGE', 0)
+    res = np.abs(test_par -par).max()
+    #test assertion to precison of 10^-9
+    assert res == pytest.approx( 0 ,  abs = 1e-9 ) 
+
