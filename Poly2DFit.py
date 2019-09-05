@@ -164,7 +164,7 @@ class Poly2DFit:
         self.mse = MSE(self.data, model)
         self.r2 = R2(self.data, model)
 
-        self.bias = MSE( self.data, expect_model)
+        self.bias = MSE( self.data, expect_model) ## bias is difference of xi to X accecpted (data), but MSE is standard error so not sure if this is the same thing??
         self.variance = MSE(model, expect_model)
         return self.x, self.y, model
 
