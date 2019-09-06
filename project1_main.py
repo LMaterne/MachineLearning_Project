@@ -9,10 +9,12 @@ def main():
     #creat fit object
     fit_object = Poly2DFit.Poly2DFit()
     #generate data with noise: mean 0, var =1
-    fit_object.generate_split_Sample(n)
-    print('this is the split x and y', fit_object.x,fit_object.y)
-    #split the sample 
-    fit_object.split()
+    fit_object.generateSample(n)
+    
+    #fit_object.generate_split_Sample(n)
+    #print('this is the split x and y', fit_object.x,fit_object.y)
+     
+    
     #run polynomial fit of order 3, OLS type
     #returns the fitted parameters and theire variance
     par, par_var = fit_object.run_fit( order, 'OLS'  )
