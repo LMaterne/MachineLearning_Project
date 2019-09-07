@@ -1,6 +1,7 @@
-from additional_functions_project1 import MSE, R2, FrankeFunction
+from additional_functions_project1 import MSE, R2, FrankeFunction, plot_it, split
 import numpy as np 
 import subprocess
+
 
   
 class Poly2DFit:
@@ -25,6 +26,16 @@ class Poly2DFit:
         and z = f(x,y) + eps with f the Franke function and eps normal distributed with mean and var
         """
         self.x, self.y = np.random.rand(2,n)
+        self.data = FrankeFunction(self.x, self.y) + np.sqrt(var)*np.random.randn(n) + mean
+
+    def generate_split_Sample(self, n, mean = 0, var = 1):
+        """
+        Generates (n,3) samples [x,y,z], where x,y are uniform random numbers [0,1) 
+        and z = f(x,y) + eps with f the Franke function and eps normal distributed with mean and var
+        then the function splits the data into training and test data
+        """
+        m, n = np.random.rand(2,n)
+        self.x, self.y, self.xtest, self.ytest = split(m,n)
         self.data = FrankeFunction(self.x, self.y) + np.sqrt(var)*np.random.randn(n) + mean
 
     def givenData(self, x, y, f):
@@ -158,17 +169,23 @@ class Poly2DFit:
         """
         p = self.par.shape[0]
 
-        model = self._design.dot(self.par)
-        expect_model = np.mean(model)
+        self.model = self._design.dot(self.par)
+        expect_model = np.mean(self.model)
 
-        self.mse = MSE(self.data, model)
-        self.r2 = R2(self.data, model)
+        self.mse = MSE(self.data, self.model)
+        self.r2 = R2(self.data, self.model)
 
-        self.bias = MSE( self.data, expect_model) ## bias is difference of xi to X accecpted (data), but MSE is standard error so not sure if this is the same thing??
-        self.variance = MSE(model, expect_model)
-        return self.x, self.y, model
+        self.bias = MSE( self.data, expect_model)
+        self.variance = MSE(self.model, expect_model)
+        return self.x, self.y, self.model
+    
+   
+    def plot_function(self):
+        
+        self.plot_function = plot_it(self.x,self.y, self.model, self.data)
+         
 
-    def store_information(self, filepath, filename):
+'''    def store_information(self, filepath, filename):
     
         try:
             f = open(filepath + "/" + filename  + ".txt",'w+')
@@ -186,3 +203,4 @@ class Poly2DFit:
         for i in range(len(self.par)):
             f.write("beta_%i = %.4f +- %.4f\n" %(i, self.par[i], np.sqrt(self.par_var[i])) )
         f.close()
+'''
