@@ -180,9 +180,9 @@ class Poly2DFit:
         return self.x, self.y, self.model
     
    
-    def plot_function(self,zdata):
+    def plot_function(self):
         
-        self.plot_function = plot_it(self.x,self.y,zdata)
+        self.plot_function = plot_it(self.x,self.y, self.model, self.data)
          
 
 '''    def store_information(self, filepath, filename):
