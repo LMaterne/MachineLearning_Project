@@ -1,6 +1,5 @@
 #additional functions
 import numpy as np
-from sklearn.utils import resample
 
 import matplotlib.pyplot as plt
 
@@ -69,7 +68,7 @@ def plot_it(x,y,model,franke_data):
     #fig.colorbar(surf, shrink=0.5, aspect=5)
     plt.show()
 
-def split(x,y):
+def kfold(x,y):
     '''This is a function to resample the data into training data for the model and test data.
     Inputs: x data from the full set
             y data from the full set
@@ -78,9 +77,15 @@ def split(x,y):
             xtest will have 0.33 of the full data set
     
     '''
-    
-    xtrain, xtest, ytrain, ytest = train_test_split(x, y, train_size=0.66, random_state=None)
-    
-    return xtrain, xtest, ytrain, ytest
+    n = np.shape(x)[0]
+    meanX = np.zeros(n)
+    meanY = np.zeros(n)
+    k = 0
+    while k < n:
+        xtrain, xtest, ytrain, ytest = train_test_split(x, y, train_size=0.66)
+        meanX[k] = np.mean(xtrain)
+        meanY[k] = np.mean(ytrain)
+        k=k+1
+    return meanX, meanY
 
     

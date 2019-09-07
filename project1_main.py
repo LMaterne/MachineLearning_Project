@@ -12,9 +12,7 @@ def main():
     #generate data with noise: mean 0, var =1
     fit_object.generateSample(n)
     
-    
-    #run polynomial fit of order 3, OLS type
-    #returns the fitted parameters and theire variance
+    #returns the fitted parameters and their variance
     par, par_var = fit_object.run_fit( order, 'OLS'  )
     
     #evaluate model, return x,y points and model prediction
@@ -36,20 +34,14 @@ def main():
     #plot the data and model
     fit_object.plot_function()
     
-    order = 6
+    # new instance of the class
     fit_object1 = Poly2DFit.Poly2DFit()
-    fit_object1.generateSample(n)
+    #now do the same as above but using k fold cross validation
+    fit_object1.generateKfold(n)
     par, par_var = fit_object1.run_fit( order, 'OLS'  )
     fit_object1.evaluate_model()
     fit_object1.plot_function()
-    
-    order = 5
-    fit_object2 = Poly2DFit.Poly2DFit()
-    fit_object2.generateSample(n)
-    par, par_var = fit_object2.run_fit( order, 'OLS'  )
-    fit_object2.evaluate_model()
-    fit_object2.plot_function()
-    
+     
     
     
 if __name__ == "__main__":
