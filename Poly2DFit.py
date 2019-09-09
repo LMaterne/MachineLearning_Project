@@ -176,7 +176,7 @@ class Poly2DFit:
 
         self.mse = MSE(self.data, self.model)
         self.r2 = R2(self.data, self.model)
-
+      
         self.bias = MSE( self.data, expect_model)
         self.variance = MSE(self.model, expect_model)
         return self.x, self.y, self.model
