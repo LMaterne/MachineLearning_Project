@@ -85,6 +85,8 @@ def kfold(x,y):
         xtrain, xtest, ytrain, ytest = train_test_split(x, y, train_size=0.66)
         meanX[k] = np.mean(xtrain)
         meanY[k] = np.mean(ytrain)
+        
+        
         k=k+1
     return meanX, meanY
 

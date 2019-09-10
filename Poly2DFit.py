@@ -36,6 +36,7 @@ class Poly2DFit:
         It the repeats this n times
         
         """
+        #random.seed(0)
         x, y = np.random.rand(2,n)
         self.x, self.y = kfold(x,y)
         self.data = FrankeFunction(self.x, self.y) + np.sqrt(var)*np.random.randn(n) + mean
