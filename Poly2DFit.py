@@ -25,6 +25,7 @@ class Poly2DFit:
         Generates (n,3) samples [x,y,z], where x,y are uniform random numbers [0,1) 
         and z = f(x,y) + eps with f the Franke function and eps normal distributed with mean and var
         """
+        np.random.seed(0)
         self.x, self.y = np.random.rand(2,n)
         self.data = FrankeFunction(self.x, self.y) + np.sqrt(var)*np.random.randn(n) + mean
 
@@ -36,7 +37,7 @@ class Poly2DFit:
         It the repeats this n times
         
         """
-        #random.seed(0)
+        np.random.seed(0)
         x, y = np.random.rand(2,n)
         self.x, self.y = kfold(x,y)
         self.data = FrankeFunction(self.x, self.y) + np.sqrt(var)*np.random.randn(n) + mean
@@ -178,7 +179,7 @@ class Poly2DFit:
         self.mse = MSE(self.data, self.model)
         self.r2 = R2(self.data, self.model)
       
-        self.bias = MSE( self.data, expect_model)
+        self.bias = MSE(FrankeFunction(self.x, self.y), expect_model) # explain this in text why we use FrankeFunction
         self.variance = MSE(self.model, expect_model)
         return self.x, self.y, self.model
     

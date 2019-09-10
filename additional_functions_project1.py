@@ -22,14 +22,19 @@ def MSE(data, model):
     """
     n = np.shape(data)[0]
     res = np.array(data - model)
-    return 1.0/n *res.T.dot(res)
+    return (1.0/n) *(res.T.dot(res))
 
 def R2(data, model):
     """
     calculate the R2 score function
     """
-    numerator = MSE(data, model)
-    denominator = MSE(data, np.mean(data))
+    n = np.shape(data)[0]
+    res = np.array(data - model)
+    numerator = (res.T.dot(res))
+    res1 = (data - np.mean(data))
+    denominator = (res1.T.dot(res1))
+    #numerator = MSE(data, model)
+    #denominator = MSE(data, np.mean(data))
     return 1.0 - numerator/denominator
 
 def plot_it(x,y,model,franke_data):

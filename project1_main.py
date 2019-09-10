@@ -27,8 +27,8 @@ def main():
         fit_object = Poly2DFit.Poly2DFit()
     
         #generate data with noise: mean 0, var =1
-        #fit_object.generateSample(n)
-        fit_object.generateKfold(n)
+        fit_object.generateSample(n)
+        #fit_object.generateKfold(n)
         
         #returns the fitted parameters and their variance
         par, par_var = fit_object.run_fit( i, 'OLS'  )
@@ -37,18 +37,15 @@ def main():
         x, y, fit = fit_object.evaluate_model()
         
         table_of_info.iloc[i-1,0] = fit_object.mse # this is an error don't know why i need this -1
-    
         table_of_info.iloc[i-1,1] = fit_object.r2
-       
         table_of_info.iloc[i-1,2] = fit_object.bias
         table_of_info.iloc[i-1,3] = fit_object.variance
         
+        #print ('i is:', i)
         num_of_p = int((i+1)*(i+2)/2)
-        
         
         for m in range (0,num_of_p):
             coef_matrix.iloc[i-1,m] = fit_object.par[m]
-        
         
     #stores information about the fit in ./Test/OLS/first_OLS.txt
     #fit_object.store_information('Test/OLS','first_OLS')
