@@ -27,8 +27,9 @@ def main():
         fit_object = Poly2DFit.Poly2DFit()
     
         #generate data with noise: mean 0, var =1
-        fit_object.generateSample(n)
-    
+        #fit_object.generateSample(n)
+        fit_object.generateKfold(n)
+        
         #returns the fitted parameters and their variance
         par, par_var = fit_object.run_fit( i, 'OLS'  )
     
