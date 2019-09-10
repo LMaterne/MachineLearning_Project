@@ -1,6 +1,7 @@
 from additional_functions_project1 import MSE, R2, FrankeFunction, plot_it, kfold
 import numpy as np 
 import subprocess
+import warnings
 
 
   
@@ -129,7 +130,16 @@ class Poly2DFit:
         calculates the estimated parameters of an OLS
         outputs variance as the diagonal entries of (X^TX)^-1
         """
-        inverse = np.linalg.inv(self._design.T.dot(self._design))
+        XTX = self._design.T.dot(self._design)
+        #try to use standard inversion, otherwise use SVD
+        try:
+            inverse = np.linalg.inv(XTX)
+        except:
+            print("in exception")
+            raise warnings.warn("Singular Matrix: Using SVD", Warning)
+            U, S, VT = np.linalg.svd(XTX)
+            inverse = VT.T.dot(np.diag(1/S)).dot(U.T)
+
         self.par_var = np.diag(inverse)
         self.par = inverse.dot(self._design.T).dot(self.data)
 
@@ -141,7 +151,16 @@ class Poly2DFit:
         """
         #creating identity matrix weighted with lam
         diag = self.lam * np.ones(self._design.shape[1])
-        inverse = np.linalg.inv(self._design.T.dot(self._design) + np.diag(diag))
+        XTX_lam = self._design.T.dot(self._design) + np.diag(diag)
+
+        #try to use standard inversion, otherwise use SVD
+        try:
+            inverse = np.linalg.inv(XTX_lam)
+        except:
+            warnings.warn("Singular Matrix: Using SVD", Warning)
+            U, S, VT = np.linalg.svd(XTX_lam)
+            inverse = VT.T.dot(np.diag(1/S)).dot(U.T)
+
         self.par_var = np.diag(inverse)
         self.par = inverse.dot(self._design.T).dot(self.data)
         

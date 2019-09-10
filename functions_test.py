@@ -1,7 +1,8 @@
 import Poly2DFit 
 import numpy as np 
 import pytest
-
+from sklearn. metrics import r2_score, mean_squared_error
+from additional_functions_project1 import R2, MSE
 """
 run pytest command from comandline 
 automatically executes all test_*.py or *_test.py files
@@ -22,7 +23,8 @@ def test_Poly2DFit():
     create_fit.x = x
     create_fit.y = y
     create_fit.order = 3
-    design = create_fit.matDesign()
+    create_fit.matDesign()
+    design = create_fit._design
     #assigning data to fit to with X.beta
     data = design.dot(par)
     #free memory and test with new class instance
@@ -42,4 +44,21 @@ def test_Poly2DFit():
     res = np.abs(test_par -par).max()
     #test assertion to precison of 10^-9
     assert res == pytest.approx( 0 ,  abs = 1e-9 ) 
+
+def test_metrices():
+    """
+    test the MSE and R2 implementation against sklearn and numpy
+    """
+    x = np.random.rand(1000)
+    data =2*x + 2*np.random.randn(1000) + 5
+    #test MSE usage as var
+    assert np.abs( MSE(data, np.mean(data)) - np.var(data) ) == pytest.approx(0)
+    #test MSE usage as MSE
+    assert np.abs(MSE(data, 2*x) - mean_squared_error(data, 2*x)) == pytest.approx(0)
+    #test R2
+    assert np.abs(R2(data, 2*x) - r2_score(data, 2*x)) == pytest.approx(0)
+
+
+
+
 
