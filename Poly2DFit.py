@@ -208,7 +208,7 @@ class Poly2DFit:
         self.plot_function = plot_it(self.x,self.y, self.model, self.data)
          
 
-'''    def store_information(self, filepath, filename):
+    def store_information(self, filepath, filename):
     
         try:
             f = open(filepath + "/" + filename  + ".txt",'w+')
@@ -226,4 +226,3 @@ class Poly2DFit:
         for i in range(len(self.par)):
             f.write("beta_%i = %.4f +- %.4f\n" %(i, self.par[i], np.sqrt(self.par_var[i])) )
         f.close()
-'''
