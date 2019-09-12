@@ -204,12 +204,16 @@ class Poly2DFit:
     
    
     def plot_function(self):
-        
+        """
+        This functions: 
+        -plots the x,y and franke function data in a scatter plot
+        -plots the x,y and model in a triangulation plot
+        """
         self.plot_function = plot_it(self.x,self.y, self.model, self.data)
          
 
     def store_information(self, filepath, filename):
-    
+        
         try:
             f = open(filepath + "/" + filename  + ".txt",'w+')
         except:

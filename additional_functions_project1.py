@@ -28,7 +28,6 @@ def R2(data, model):
     """
     calculate the R2 score function
     """
-    n = np.shape(data)[0]
     res = np.array(data - model)
     numerator = (res.T.dot(res))
     res1 = (data - np.mean(data))
@@ -40,37 +39,23 @@ def R2(data, model):
 def plot_it(x,y,model,franke_data):
     '''
     This is a function to plot the x y and z data
-    Inputs: z-axis data
-    
-    This function takes is the zdata only as x and y are assumed to stay the same
-    the zdata this could be from the franke function or the model,
-    you just need to specify
-    
-    Outputs: This function returns nothing    
-    
-    '''    
-    fig = plt.figure()    
+    Inputs: x: the generated x points
+            y: the generated y points
+            model: the model we are testing 
+            franke_data : the data from the frankefunction
+    '''       
     ax = plt.axes(projection='3d')
     
-    
+    # plots scatter and trisurf
     ax.plot_trisurf(x, y, model, cmap='viridis', edgecolor='none')
     ax.scatter(x,y,franke_data)
     
-   
+    #set the axis labels and title
     ax.set_xlabel('x')
     ax.set_ylabel('y')
     ax.set_zlabel('z')
-    ax.set_title('The franke function as scatter and the model fit')
-    #ax = fig.gca(projection='3d')
-    #surf = ax.plot_surface(x,y,z, cmap=cm.coolwarm, linewidth=0, antialiased=False)
-    
-    # Customize the z axis.
-    #ax.set_zlim(-0.10, 1.40)
-    #ax.zaxis.set_major_locator(LinearLocator(10))
-    #ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
-    
-    # Add a color bar which maps values to colors.
-    #fig.colorbar(surf, shrink=0.5, aspect=5)
+    ax.set_title('The sample data plotted as a scatter & the model plotted as a trisurf')
+  
     plt.show()
 
 def kfold(x,y):
