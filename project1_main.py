@@ -4,6 +4,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+
 def plot_stats(info, title = 'Regression Infos'):
     data = pd.DataFrame(columns = ['Complexity','Value', 'Metric'] )
     n = len(info['power'].to_numpy())
@@ -40,16 +41,17 @@ def benchmarking( regressiontype, n = 500, order = 7, lam = 0.1,
     
         #generate data with noise: mean 0, var =1
         fit_object.generateSample(n)
-        #fit_object.generateKfold(n)
+        #fit_object.generateKfold(n) #this can be commented out when we want to make a k fold sample
         
         #returns the fitted parameters and their variance
         par, par_var = fit_object.run_fit( i, regressiontype, lam )
     
         #evaluate model, return x,y points and model prediction
         x, y, fit = fit_object.evaluate_model()
+        
         #save informaton
         table_of_info.iloc[i,0] = i
-        table_of_info.iloc[i,1] = fit_object.mse # this is an error don't know why i need this -1
+        table_of_info.iloc[i,1] = fit_object.mse 
         table_of_info.iloc[i,2] = fit_object.r2
         table_of_info.iloc[i,3] = fit_object.bias
         table_of_info.iloc[i,4] = fit_object.variance
@@ -60,10 +62,10 @@ def benchmarking( regressiontype, n = 500, order = 7, lam = 0.1,
 
         if save_file:
              #stores information about the fit in ./Test/OLS/first_OLS.txt
-            fit_object.store_information(regressiontype, 'order_%i' % i)
-        #print ('i is:', i)
-        num_of_p = int((i+1)*(i+2)/2)
+             fit_object.store_information(regressiontype, 'order_%i' % i)
         
+        #find the number of parameters and then put these parameters in a table
+        num_of_p = int((i+1)*(i+2)/2)
         for m in np.arange(0,num_of_p):
             coef_matrix.iloc[i,m] = fit_object.par[m]
         
