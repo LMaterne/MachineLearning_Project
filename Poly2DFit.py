@@ -1,13 +1,13 @@
-from additional_functions_project1 import MSE, R2, FrankeFunction, plot_it, kfold
+from additional_functions_project1 import MSE, R2, FrankeFunction, plot_it
 import numpy as np 
 import subprocess
 import warnings
-
+from sklearn.model_selection import train_test_split
 
   
 class Poly2DFit:
     """
-    class which perfomers a 2D polynomial fit to givven data or generatd samples from the Franke function
+    class which perfoms a 2D polynomial fit to given data or generated samples from the Franke function
     Class Variables:
      -dependentvariables are stored in x,y and the constructed design matrix in _design
      -data to fit in data
@@ -21,28 +21,44 @@ class Poly2DFit:
         -_linReg and _ridgeReg calculate parameters with respectivly regression type and calculate parameter variance
         - runFit performes the fit
     """
-    def generateSample(self, n, mean = 0, var = 1):
+    def generateSample(self, n, gen_type, kfold , mean = 0, var = 1):
         """
         Generates (n,3) samples [x,y,z], where x,y are uniform random numbers [0,1) 
         and z = f(x,y) + eps with f the Franke function and eps normal distributed with mean and var
         """
-        np.random.seed(0)
-        self.x, self.y = np.random.rand(2,n)
-        self.data = FrankeFunction(self.x, self.y) + np.sqrt(var)*np.random.randn(n) + mean
-
-    def generateKfold(self, n, mean = 0, var = 1):
-        """
-        This is a function to generate [x,y,z] using kfold cross validation.
-        The function generates uniform random numbers [0,1] then performs n fold resamples.
-        i.e it splits a sample into training and test data and finds the mean of the training data.
-        It the repeats this n times
         
-        """
+        self.gen_type = gen_type
+        #use same random numbers each time to make evaulating easier
         np.random.seed(0)
-        x, y = np.random.rand(2,n)
-        self.x, self.y = kfold(x,y)
-        self.data = FrankeFunction(self.x, self.y) + np.sqrt(var)*np.random.randn(n) + mean
+        #create x and y randomly 
+        x_temp, y_temp = np.random.rand(2,n)
+        
+        if gen_type == 'nosplit':
+            np.random.seed(0)
+            self.x = x_temp
+            self.y = y_temp
+            
+            self.data = FrankeFunction(self.x, self.y) + np.sqrt(var)*np.random.randn(n) + mean
+            
+        if gen_type == 'split':
+            np.random.seed(0)
+            x_temp, y_temp = np.random.rand(2,n)
+            
+            # the train set size is e.g 4/5 if kfold is 5, hence test size is 1/kfold
+            xtrain, xtest, ytrain, ytest = train_test_split(x_temp, y_temp, shuffle = True, test_size= (1/kfold))
+            
+            # the x and y training data will be used to create the model
+            self.x = xtrain
+            self.y = ytrain
+            self.xtest = xtest
+            self.ytest = ytest
+            ntrain = np.shape(xtrain)[0]
+            ntest = np.shape(xtest)[0]
+            
+            self.data = FrankeFunction(self.x, self.y) + np.sqrt(var)*np.random.randn(ntrain) + mean
 
+            self.datatest = FrankeFunction(self.xtest, self.ytest) + np.sqrt(var)*np.random.randn(ntest) + mean
+    
     def givenData(self, x, y, f):
         """
         stores given 2D data in class
@@ -52,7 +68,7 @@ class Poly2DFit:
         self.y = y
         self.data = f
 
-    def matDesign (self, indVariables = 2):
+    def matDesign (self, x , y , indVariables = 2):
         '''This is a function to set up the design matrix
         the inputs are :dataSet, the n datapoints, x and y data in a nx2 matrix
                         order, is the order of the coefficients, 
@@ -61,12 +77,12 @@ class Poly2DFit:
         i.e if order = 3 and indVariables = 1, then the number of coefficients THIS function will create is 4. (1 x x**2 x**3)
         or  if order = 2 and indVariables = 2, then the number of coefficients THIS function will create is 6. (1 x y xy x**2 y**2) 
         
-        IMPORTANT NOTE: this works only for indVariables = 2 at the moment
+        IMPORTANT NOTE: this works only for indVariables = 1, 2 at the moment
         
         the outputs are X
         '''
         #stack data
-        dataSet = np.vstack((self.x, self.y)).T
+        dataSet = np.vstack((x, y)).T
 
         # if statement for the case with one independant variable
         if indVariables == 1:
@@ -175,7 +191,7 @@ class Poly2DFit:
         self.order = Pol_order
         self.lam = lam
         self.regType = regtype
-        Poly2DFit.matDesign(self)
+        Poly2DFit.matDesign(self, self.x, self.y)
 
         if regtype == 'OLS':
             Poly2DFit._linReg(self)
@@ -191,15 +207,30 @@ class Poly2DFit:
         returns the modelpoints
         """
         p = self.par.shape[0]
-
-        self.model = self._design.dot(self.par)
-        expect_model = np.mean(self.model)
-
-        self.mse = MSE(self.data, self.model)
-        self.r2 = R2(self.data, self.model)
-      
-        self.bias = MSE(FrankeFunction(self.x, self.y), expect_model) # explain this in text why we use FrankeFunction
-        self.variance = MSE(self.model, expect_model)
+        
+        if self.gen_type == 'split':
+            Poly2DFit.matDesign(self, self.xtest, self.ytest)
+            self.model = self._design.dot(self.par)
+            
+            expect_model = np.mean(self.model)
+    
+            self.mse = MSE(self.datatest, self.model)
+            self.r2 = R2(self.datatest, self.model)
+          
+            self.bias = MSE(FrankeFunction(self.xtest, self.ytest), expect_model) # explain this in text why we use FrankeFunction
+            self.variance = MSE(self.model, expect_model)
+        
+        if self.gen_type == 'nosplit':
+            Poly2DFit.matDesign(self, self.x, self.y)
+            self.model = self._design.dot(self.par)
+        
+            expect_model = np.mean(self.model)
+        
+            self.mse = MSE(self.data, self.model)
+            self.r2 = R2(self.data, self.model)
+          
+            self.bias = MSE(FrankeFunction(self.x, self.y), expect_model) # explain this in text why we use FrankeFunction
+            self.variance = MSE(self.model, expect_model)
         return self.x, self.y, self.model
     
    
@@ -209,7 +240,7 @@ class Poly2DFit:
         -plots the x,y and franke function data in a scatter plot
         -plots the x,y and model in a triangulation plot
         """
-        self.plot_function = plot_it(self.x,self.y, self.model, self.data)
+        self.plot_function = plot_it(self.x, self.y, self.model, self.data)
          
 
     def store_information(self, filepath, filename):

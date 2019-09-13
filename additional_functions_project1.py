@@ -58,26 +58,4 @@ def plot_it(x,y,model,franke_data):
   
     plt.show()
 
-def kfold(x,y):
-    '''This is a function to resample the data into training data for the model and test data.
-    Inputs: x data from the full set
-            y data from the full set
-    Outputs: its outputs the xtrain, xtest, ytrain, ytest in this order
-            xtrain will have 0.66 of the full data set
-            xtest will have 0.33 of the full data set
-    
-    '''
-    n = np.shape(x)[0]
-    meanX = np.zeros(n)
-    meanY = np.zeros(n)
-    k = 0
-    while k < n:
-        xtrain, xtest, ytrain, ytest = train_test_split(x, y, train_size=0.66)
-        meanX[k] = np.mean(xtrain)
-        meanY[k] = np.mean(ytrain)
-        
-        
-        k=k+1
-    return meanX, meanY
-
     
