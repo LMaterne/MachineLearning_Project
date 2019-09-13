@@ -40,8 +40,7 @@ def benchmarking( regressiontype, n = 500, order = 7, lam = 0.1,
         fit_object = Poly2DFit.Poly2DFit()
     
         #generate data with noise: mean 0, var =1
-        fit_object.generateSample(n)
-        #fit_object.generateKfold(n) #this can be commented out when we want to make a k fold sample
+        fit_object.generateSample(n, 'nosplit' , 5)
         
         #returns the fitted parameters and their variance
         par, par_var = fit_object.run_fit( i, regressiontype, lam )
@@ -60,9 +59,9 @@ def benchmarking( regressiontype, n = 500, order = 7, lam = 0.1,
             #plot the data and model
             fit_object.plot_function()
 
-        if save_file:
+#        if save_file:
              #stores information about the fit in ./Test/OLS/first_OLS.txt
-             fit_object.store_information(regressiontype, 'order_%i' % i)
+#             fit_object.store_information(regressiontype, 'order_%i' % i)
         
         #find the number of parameters and then put these parameters in a table
         num_of_p = int((i+1)*(i+2)/2)
