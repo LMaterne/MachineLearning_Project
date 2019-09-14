@@ -40,7 +40,7 @@ def benchmarking( regressiontype, n = 500, order = 7, lam = 0.1,
         fit_object = Poly2DFit.Poly2DFit()
     
         #generate data with noise: mean 0, var =1
-        fit_object.generateSample(n, 'nosplit' , 5)
+        fit_object.generateSample(n, 'split' , 5)
         
         #returns the fitted parameters and their variance
         par, par_var = fit_object.run_fit( i, regressiontype, lam )
@@ -84,7 +84,7 @@ def benchmarking( regressiontype, n = 500, order = 7, lam = 0.1,
 def main():
     
     toi_ols = benchmarking('OLS', 100, 5, save_file=True)
-    toi_ridge = benchmarking('RIDGE', 100, 5, save_file=True)
+#    toi_ridge = benchmarking('RIDGE', 100, 5, save_file=True)
       
     
     
