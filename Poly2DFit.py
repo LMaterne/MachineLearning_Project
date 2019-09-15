@@ -21,50 +21,27 @@ class Poly2DFit:
         -_linReg and _ridgeReg calculate parameters with respectivly regression type and calculate parameter variance
         - runFit performes the fit
     """
-    def generateSample(self, n, gentype, kfold , mean = 0, var = 1):
+    def __init__(self):
+        """
+        initialize kfold flag
+        """
+        self.kfold = False
+        #set seed for comparability
+        np.random.seed(159)
+
+    def generateSample(self, n, mean = 0., var = 1):
         """
         This function creates a sample [x,y,z] where x,y are uniform random numbers [0,1)
         and z = f(x,y) + eps with f the Franke function and eps normal distributed with mean and var
-        This function also has the option to create a kfold split into test and training sets
-        
-        Inputs: n:          the number of data points
-                gen_type:   this is either split or nosplit i.e train test split yes or no
-                kfold:      the number of fold to splits the population into ,usually 5 or 10
-        Outputs:
-                x:          x points
-                y:          y points
-                data:       x and y passed into the franke function
         """
         
-        self.genType = gentype
         #use same random numbers each time to make evaulating easier
-        np.random.seed(0)
         #create x and y randomly 
-        x_temp, y_temp = np.random.rand(2,n)
+        self.x, self.y = np.random.rand(2,n)
         
-        if gentype == 'nosplit':
-            self.x = x_temp
-            self.y = y_temp 
-            #pass the x and y data into the Franke function this will be used later in evaluating the model
-            self.data = FrankeFunction(self.x, self.y) + np.sqrt(var)*np.random.randn(n) + mean
-            
-        if gentype == 'split':
-            # the train set size is e.g 4/5 if kfold is 5, hence test size is 1/kfold
-            xtrain, xtest, ytrain, ytest = train_test_split(x_temp, y_temp, shuffle = True, test_size= (1/kfold))
-            
-            # the x and y training data will be used to create the model
-            self.x = xtrain
-            self.y = ytrain
-            self.xtest = xtest
-            self.ytest = ytest
-            
-            #find the length of the training and test data
-            ntrain = np.shape(xtrain)[0]
-            ntest = np.shape(xtest)[0]
-            
-            #pass the training and test data into the Franke function this will be used later in evaluating the model
-            self.data = FrankeFunction(self.x, self.y) + np.sqrt(var)*np.random.randn(ntrain) + mean
-            self.datatest = FrankeFunction(self.xtest, self.ytest) + np.sqrt(var)*np.random.randn(ntest) + mean
+        #pass the x and y data into the Franke function this will be used later in evaluating the model
+        self.data = FrankeFunction(self.x, self.y) + np.sqrt(var)*np.random.randn(n) + mean
+
     
     def givenData(self, x, y, f):
         """
@@ -74,6 +51,42 @@ class Poly2DFit:
         self.x = x
         self.y = y
         self.data = f
+
+    def kFold(self, k):
+        """
+        runs the k-Fold cross-validation on the given data
+        sets the training example afterwards to self.x, self.y, self.data
+        sets kfold flag to True
+        """
+        self.kfold = True
+        self.k = k
+
+        kinv = 1.0/k
+        #determin length
+        xtrain, xtest = train_test_split(self.x, shuffle = True, test_size= kinv)
+        len_test = len(xtest)
+        len_train = len(xtrain)
+
+        self.xtrain = np.zeros(len_train)
+        self.ytrain = np.zeros(len_train)
+        self.datatrain = np.zeros(len_train)
+
+        self.xtest = np.zeros(len_test)
+        self.ytest = np.zeros(len_test)
+        self.datatest = np.zeros(len_test)
+
+        for i in range(k):
+            # the train set size is e.g 4/5 if kfold is 5, hence test size is 1/kfold
+            xtrain, xtest, ytrain, ytest, datatrain, datatest = train_test_split(self.x, self.y, 
+                                                                self.data, shuffle = True,
+                                                                 test_size= kinv)
+            # the x and y training data will be used to create the model
+            self.xtrain += kinv * xtrain
+            self.ytrain += kinv * ytrain
+            self.datatrain += kinv * datatrain
+            self.xtest += kinv * xtest
+            self.ytest += kinv * ytest
+        
  
     def run_fit(self, Pol_order, regtype, lam = 0.1):
         """
@@ -85,7 +98,11 @@ class Poly2DFit:
         self.order = Pol_order
         self.lam = lam
         self.regType = regtype
-        Poly2DFit.matDesign(self, self.x, self.y)
+
+        if self.kfold:
+            Poly2DFit.matDesign(self, self.xtrain, self.ytrain)
+        else:
+            Poly2DFit.matDesign(self, self.x, self.y)
 
         if regtype == 'OLS':
             Poly2DFit._linReg(self)
@@ -110,7 +127,10 @@ class Poly2DFit:
             inverse = VT.T.dot(np.diag(1/S)).dot(U.T)
 
         self.par_var = np.diag(inverse)
-        self.par = inverse.dot(self._design.T).dot(self.data)
+        if self.kfold:
+            self.par = inverse.dot(self._design.T).dot(self.datatrain)
+        else:
+            self.par = inverse.dot(self._design.T).dot(self.data)
 
     def _ridgeReg(self):
         """
@@ -121,7 +141,6 @@ class Poly2DFit:
         #creating identity matrix weighted with lam
         diag = self.lam * np.ones(self._design.shape[1])
         XTX_lam = self._design.T.dot(self._design) + np.diag(diag)
-
         #try to use standard inversion, otherwise use SVD
         try:
             inverse = np.linalg.inv(XTX_lam)
@@ -131,7 +150,10 @@ class Poly2DFit:
             inverse = VT.T.dot(np.diag(1/S)).dot(U.T)
 
         self.par_var = np.diag(inverse)
-        self.par = inverse.dot(self._design.T).dot(self.data)
+        if self.kfold:
+            self.par = inverse.dot(self._design.T).dot(self.datatrain)
+        else:
+            self.par = inverse.dot(self._design.T).dot(self.data)
        
     def matDesign (self, x , y , indVariables = 2):
         '''This is a function to set up the design matrix
@@ -214,25 +236,28 @@ class Poly2DFit:
         """
         p = self.par.shape[0]
         
-        if self.genType == 'split':
-            
+        if self.kfold:
+            #model with training input
+            model_train = self._design.dot(self.par)
+
             Poly2DFit.matDesign(self, self.xtest, self.ytest)
-            self.model = self._design.dot(self.par)
+            #model with training and test input
+            model_test = self._design.dot(self.par)
             
-            expect_model = np.mean(self.model)
+            expect_model = np.mean(model_test)
     
-            self.mse = MSE(self.datatest, self.model)
-            self.r2 = R2(self.datatest, self.model)
+            self.mse = MSE(self.datatest, model_test)
+            self.r2 = R2(self.datatest, model_test)
           
             #self.bias = MSE(FrankeFunction(self.xtest, self.ytest), expect_model) # explain this in text why we use FrankeFunction
-            self.variance = MSE(self.model, expect_model)
+            self.variance = MSE(model_test, expect_model)
             #alternative implementaton
             # MSE = bias + variance + data_var <-> bias = MSE - varinace - data_var
             #what is data var?
             self.bias = self.mse - self.variance - np.var([self.x, self.y])
+            self.model = np.append(model_train, model_test)
         
-        if self.genType == 'nosplit':
-            Poly2DFit.matDesign(self, self.x, self.y)
+        else:
             self.model = self._design.dot(self.par)
         
             expect_model = np.mean(self.model)
@@ -240,8 +265,9 @@ class Poly2DFit:
             self.mse = MSE(self.data, self.model)
             self.r2 = R2(self.data, self.model)
           
-            self.bias = MSE(FrankeFunction(self.x, self.y), expect_model) # explain this in text why we use FrankeFunction
+            #self.bias = MSE(FrankeFunction(self.x, self.y), expect_model) # explain this in text why we use FrankeFunction
             self.variance = MSE(self.model, expect_model)
+            self.bias = self.mse - self.variance - np.var([self.x, self.y])
        
         return self.x, self.y, self.model
     
@@ -267,7 +293,8 @@ class Poly2DFit:
         
         if self.regType != 'OLS':
             f.write("Regularization parameter lambda = %f\n" %self.lam)
-        
+        if self.kfold:
+            f.write("k-fold cross-validation with %i runs \n" %self.k)
         f.write("MSE = %.4f \t R2 = %.4f \t Bias(model)=%.4f \t Variance(model) =%.4f \n" %(self.mse, self.r2, self.bias, self.variance))
         f.write("Parameter Information:\n")
         for i in range(len(self.par)):
