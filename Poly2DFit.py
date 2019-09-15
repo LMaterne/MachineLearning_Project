@@ -28,6 +28,11 @@ class Poly2DFit:
         self.kfold = False
         #set seed for comparability
         np.random.seed(159)
+        self.mse = 0
+        self.r2 = 0
+        self.variance = 0
+        self. bias = 0
+        
 
     def generateSample(self, n, mean = 0., var = 1):
         """
@@ -41,7 +46,6 @@ class Poly2DFit:
         
         #pass the x and y data into the Franke function this will be used later in evaluating the model
         self.data = FrankeFunction(self.x, self.y) + np.sqrt(var)*np.random.randn(n) + mean
-
     
     def givenData(self, x, y, f):
         """
@@ -52,42 +56,25 @@ class Poly2DFit:
         self.y = y
         self.data = f
 
-    def kFold(self, k):
+    def kfold_cross(self, Pol_order, regtype, lam = 0.1, k= 1):
         """
         runs the k-Fold cross-validation on the given data
         sets the training example afterwards to self.x, self.y, self.data
         sets kfold flag to True
         """
-        self.kfold = True
         self.k = k
-
+        self.kfold = True
         kinv = 1.0/k
         #determin length
-        xtrain, xtest = train_test_split(self.x, shuffle = True, test_size= kinv)
-        len_test = len(xtest)
-        len_train = len(xtrain)
-
-        self.xtrain = np.zeros(len_train)
-        self.ytrain = np.zeros(len_train)
-        self.datatrain = np.zeros(len_train)
-
-        self.xtest = np.zeros(len_test)
-        self.ytest = np.zeros(len_test)
-        self.datatest = np.zeros(len_test)
-
         for i in range(k):
-            # the train set size is e.g 4/5 if kfold is 5, hence test size is 1/kfold
-            xtrain, xtest, ytrain, ytest, datatrain, datatest = train_test_split(self.x, self.y, 
-                                                                self.data, shuffle = True,
-                                                                 test_size= kinv)
-            # the x and y training data will be used to create the model
-            self.xtrain += kinv * xtrain
-            self.ytrain += kinv * ytrain
-            self.datatrain += kinv * datatrain
-            self.xtest += kinv * xtest
-            self.ytest += kinv * ytest
+            self.xtrain, self.xtest, self.ytrain, self.ytest, self.datatrain, self.datatest = train_test_split(self.x, self.y, 
+                                                                                                                self.data,
+                                                                                                                shuffle = True,
+                                                                                                                test_size= 4/5)
         
- 
+            Poly2DFit.run_fit(self, Pol_order, regtype, lam)
+            Poly2DFit.evaluate_model(self, self.k)
+
     def run_fit(self, Pol_order, regtype, lam = 0.1):
         """
         perfomes the fit of the data to the model given as design matrix
@@ -98,6 +85,7 @@ class Poly2DFit:
         self.order = Pol_order
         self.lam = lam
         self.regType = regtype
+        self.model = np.zeros(self.data.shape)
 
         if self.kfold:
             Poly2DFit.matDesign(self, self.xtrain, self.ytrain)
@@ -228,7 +216,7 @@ class Poly2DFit:
                 col_G = col_G + 1            
                 j = j + 1 
  
-    def evaluate_model(self):
+    def evaluate_model(self, k = 1):
         """
         -calculates the MSE
         -calcualtes the variance and bias of the modell
@@ -246,16 +234,16 @@ class Poly2DFit:
             
             expect_model = np.mean(model_test)
     
-            self.mse = MSE(self.datatest, model_test)
-            self.r2 = R2(self.datatest, model_test)
+            self.mse += MSE(self.datatest, model_test)/self.k
+            self.r2 += R2(self.datatest, model_test)/self.k
           
             #self.bias = MSE(FrankeFunction(self.xtest, self.ytest), expect_model) # explain this in text why we use FrankeFunction
-            self.variance = MSE(model_test, expect_model)
+            self.variance += MSE(model_test, expect_model)/self.k
             #alternative implementaton
             # MSE = bias + variance + data_var <-> bias = MSE - varinace - data_var
             #what is data var?
-            self.bias = self.mse - self.variance - np.var([self.x, self.y])
-            self.model = np.append(model_train, model_test)
+            self.bias += (self.mse - self.variance - np.var([self.x, self.y]))/self.k
+            self.model += np.append(model_train, model_test)/self.k
         
         else:
             self.model = self._design.dot(self.par)

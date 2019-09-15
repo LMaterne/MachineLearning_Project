@@ -61,13 +61,13 @@ def benchmarking( regressiontype, n = 500, order = 7, lam = 0.1, kfold = 0,
         fit_object.generateSample(n)
 
         if kfold != 0:
-            fit_object.kFold(kfold)
+            fit_object.kfold_cross(i, regressiontype, lam, kfold )
+        else:        
+            #returns the fitted parameters and their variance
+            par, par_var = fit_object.run_fit( i, regressiontype, lam )
         
-        #returns the fitted parameters and their variance
-        par, par_var = fit_object.run_fit( i, regressiontype, lam )
-    
-        #evaluate model, return x,y points and model prediction
-        x, y, fit = fit_object.evaluate_model()
+            #evaluate model, return x,y points and model prediction
+            x, y, fit = fit_object.evaluate_model()
         
         #save informaton
         table_of_info.iloc[i,0] = i
@@ -109,7 +109,7 @@ def main():
 
     ks = [0, 2, 5, 10]
     lam = [0.01, 0.1, 1]
-    max_order = 9
+    max_order = 6
     samples = 500
 
     toi = pd.DataFrame(columns = ['Regression type','lambda','kFold',
