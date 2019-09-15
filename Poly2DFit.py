@@ -224,8 +224,12 @@ class Poly2DFit:
             self.mse = MSE(self.datatest, self.model)
             self.r2 = R2(self.datatest, self.model)
           
-            self.bias = MSE(FrankeFunction(self.xtest, self.ytest), expect_model) # explain this in text why we use FrankeFunction
+            #self.bias = MSE(FrankeFunction(self.xtest, self.ytest), expect_model) # explain this in text why we use FrankeFunction
             self.variance = MSE(self.model, expect_model)
+            #alternative implementaton
+            # MSE = bias + variance + data_var <-> bias = MSE - varinace - data_var
+            #what is data var?
+            self.bias = self.mse - self.variance - np.var([self.x, self.y])
         
         if self.genType == 'nosplit':
             Poly2DFit.matDesign(self, self.x, self.y)
