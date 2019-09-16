@@ -143,7 +143,7 @@ class Poly2DFit:
           # Using train set X, f
           self.clf_l = lasso.fit(self.design,self.data)
           # Using test set f to predict f
-          self.f_tilde_lasso = clf_l.predict(self.design)
+          self.f_tilde_lasso = clf_l.predict(self.data)
 """
  might use these to get an overview.
     train_score=lasso.score(X_train,z_train)
