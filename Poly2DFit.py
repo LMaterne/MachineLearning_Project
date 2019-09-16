@@ -138,12 +138,12 @@ class Poly2DFit:
         """
         Creates a model using Lasso, Returns the estimated output z
         """
-          lasso = Lasso(alpha=self.lam, max_iter=10e5)
-          # creates the Lasso parameters
-          # Using train set X, f
-          self.clf_l = lasso.fit(self.design,self.data)
-          # Using test set f to predict f
-          self.f_tilde_lasso = clf_l.predict(self.data)
+        lasso = Lasso(alpha=self.lam, max_iter=10e5)
+        # creates the Lasso parameters
+        # Using train set X, f
+        self.clf_l = lasso.fit(self.design,self.data)
+        # Using test set f to predict f
+        self.f_tilde_lasso = self.clf_l.predict(self.data)
 """
  might use these to get an overview.
     train_score=lasso.score(X_train,z_train)
@@ -152,7 +152,7 @@ class Poly2DFit:
     print("training score:", train_score)
     print("test score: ", test_score)
     print("number of features used: ", coeff_used)
-""""
+"""
 
 
     def matDesign (self, x , y , indVariables = 2):
