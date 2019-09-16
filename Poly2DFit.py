@@ -66,12 +66,32 @@ class Poly2DFit:
         self.kfold = True
         kinv = 1.0/k
         #determin length
-        for i in range(k):
-            self.xtrain, self.xtest, self.ytrain, self.ytest, self.datatrain, self.datatest = train_test_split(self.x, self.y, 
-                                                                                                                self.data,
-                                                                                                                shuffle = True,
-                                                                                                                test_size= 4/5)
         
+        np.random.seed(0)
+        np.random.shuffle(self.x)
+        np.random.seed(0)
+        np.random.shuffle(self.y)
+        np.random.seed(0)
+        np.random.shuffle(self.data)
+        
+        x_folds = np.array_split(self.x, k)
+        y_folds = np.array_split(self.y, k)
+        data_folds = np.array_split(self.data, k)
+        
+        
+        for i in range(k):
+            xtrain = np.delete(x_folds, i , 0)
+            ytrain = np.delete(x_folds, i , 0)
+            datatrain = np.delete(data_folds, i , 0)
+            
+            self.xtrain = np.concatenate(xtrain)
+            self.xtest  = x_folds[i]
+            self.ytrain = np.concatenate(ytrain)
+            self.ytest  = y_folds[i]
+            self.datatrain = np.concatenate(datatrain)
+            self.datatest  = data_folds[i]
+            
+            
             Poly2DFit.run_fit(self, Pol_order, regtype, lam)
             Poly2DFit.evaluate_model(self, self.k)
 

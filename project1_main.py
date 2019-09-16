@@ -107,10 +107,10 @@ def benchmarking( regressiontype, n = 500, order = 7, lam = 0.1, kfold = 0,
 
 def main():
 
-    ks = [0, 2, 5, 10]
+    ks = [0, 5, 10]
     lam = [0.01, 0.1, 1]
     max_order = 6
-    samples = 500
+    samples = 100
 
     toi = pd.DataFrame(columns = ['Regression type','lambda','kFold',
                                         'Complexity','Value', 'Metric'] )
