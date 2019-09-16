@@ -144,15 +144,15 @@ class Poly2DFit:
         self.clf_l = lasso.fit(self.design,self.data)
         # Using test set f to predict f
         self.f_tilde_lasso = self.clf_l.predict(self.data)
-"""
- might use these to get an overview.
-    train_score=lasso.score(X_train,z_train)
-    test_score=lasso.score(X_test,z_test)
-    coeff_used = np.sum(lasso.coef_!=0)
-    print("training score:", train_score)
-    print("test score: ", test_score)
-    print("number of features used: ", coeff_used)
-"""
+        """
+        might use these to get an overview.
+        train_score=lasso.score(X_train,z_train)
+        test_score=lasso.score(X_test,z_test)
+        coeff_used = np.sum(lasso.coef_!=0)
+        print("training score:", train_score)
+        print("test score: ", test_score)
+        print("number of features used: ", coeff_used)
+        """
 
 
     def matDesign (self, x , y , indVariables = 2):
