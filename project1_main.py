@@ -109,23 +109,39 @@ def benchmarking( regressiontype, n = 500, order = 7, lam = 0.1, kfold = 0,
 
 def main():
 
-    ks = [0, 5, 10]
-    lam = [10**i for i in np.arange(-5,0, dtype=np.float)]
+    ks = [0, 1, 5, 10]
+    lam = [10**(-5), 10**(-3), 10**(-1)]
 
-    max_order = 7
-    samples = 100
+    max_order = 10
+    samples = 1800*3600
 
     toi = pd.DataFrame(columns = ['Regression type','lambda','kFold',
                                         'Complexity','Value', 'Metric'] )
+
+    ops = len(ks) * ( 2 * len(lam) + 1)
+    one_part = 100 / ops #in%
+    current_progress = 0
+
     for k in ks:
+        current_progress += one_part
+        print("Now: OLS; Progress", int(current_progress), "%")
         temp = benchmarking('OLS', samples, max_order+1, kfold=k, plot_info= False, display_info = False)
         toi = toi_append(toi, temp, 'OLS', 0, k)
+        
         for l in lam:
+            current_progress += one_part
+            print("Now: RIDGE; Progress", int(current_progress), "%")
             temp = benchmarking('RIDGE', samples, max_order+1, lam=l, kfold= k, plot_info= False, display_info = False)
             toi = toi_append(toi, temp, 'RIDGE', l, k)
 
+
+            current_progress += one_part
+            print("Now: LASSO; Progress", int(current_progress), "%")
+            
             temp = benchmarking('LASSO', samples, max_order+1, lam=l, kfold= k, plot_info= False, display_info = False)
             toi = toi_append(toi, temp, 'LASSO', l, k)
+            
+            
             
     #filter for lam
     lam_filter =  ((toi['lambda'] == 0) | (toi['lambda'] == 0.001)) & ((toi['Metric'] != 'R2') & (toi['Metric'] != 'MSE_train'))
@@ -139,33 +155,43 @@ def main():
     book_filter = ((toi['Metric']=='MSE') | (toi['Metric']=='MSE_train')) &  ((toi['lambda'] == 0) | (toi['lambda'] == 0.001)) & (toi['kFold'] != 0)
 
     #compare kfold for different regressions
-    g = sns. FacetGrid(toi[lam_filter], row ='Regression type', col='kFold', hue ='Metric')
+    g = sns. FacetGrid(toi[lam_filter], row ='Regression type', col='kFold', hue ='Metric', margin_titles =True)
     g.map(plt.plot, 'Complexity', 'Value')
     g.add_legend()
-    g.savefig('ols_vs_ridge.pdf')
+    g.set_axis_labels('Polynom Order', 'MSE')
+    g.set(xticks = np.arange(0, max_order +1, 2))
+    g.savefig('comp_fit.pdf')
 
     #compare kfold and lambda for ridge
-    g = sns. FacetGrid(toi[ridge_filter], row ='lambda', col='kFold', hue ='Metric')
+    g = sns. FacetGrid(toi[ridge_filter], row ='lambda', col='kFold', hue ='Metric', margin_titles =True)
     g.map(plt.plot, 'Complexity', 'Value')
+    g.set_axis_labels('Polynom Order', 'MSE')
     g.add_legend()
+    g.set(xticks = np.arange(0, max_order +1, 2))
     g.savefig('ridge_lam_vs_kfold.pdf')
-
+    
     #compare kfold and lambda for lasso
-    g = sns. FacetGrid(toi[lasso_filter], row ='lambda', col='kFold', hue ='Metric')
+    g = sns. FacetGrid(toi[lasso_filter], row ='lambda', col='kFold', hue ='Metric', margin_titles =True)
     g.map(plt.plot, 'Complexity', 'Value')
+    g.set_axis_labels('Polynom Order', 'MSE')
     g.add_legend()
+    g.set(xticks = np.arange(0, max_order +1, 2))
     g.savefig('lasso_lam_vs_kfold.pdf')
-
+    
     #compare kfold and lambda fore ridge
-    g = sns. FacetGrid(toi[r2_filter], row ='lambda', col='kFold', hue ='Regression type')
+    g = sns. FacetGrid(toi[r2_filter], row ='lambda', col='kFold', hue ='Regression type', margin_titles =True)
     g.map(plt.plot, 'Complexity', 'Value')
+    g.set_axis_labels('Polynom Order', 'R2')
     g.add_legend()
+    g.set(xticks = np.arange(0, max_order +1, 2))
     g.savefig('r2.pdf')
 
     #make plot from book
-    g = sns. FacetGrid(toi[book_filter], row ='Regression type', col='kFold', hue ='Metric')
+    g = sns. FacetGrid(toi[book_filter], row ='Regression type', col='kFold', hue ='Metric', margin_titles =True)
     g.map(plt.plot, 'Complexity', 'Value')
+    g.set_axis_labels('Polynom Order', 'MSE')
     g.add_legend()
+    g.set(xticks = np.arange(0, max_order +1, 2))
     g.savefig('train_vs_test.pdf')
 
 

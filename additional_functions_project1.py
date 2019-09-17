@@ -34,13 +34,12 @@ def R2(data, model):
     """
     calculate the R2 score function
     """
-    #res = np.array(data - model)
-    res = np.array(model - np.mean(data))
+    res = np.array(data - model)
     numerator = (res.T.dot(res))
     res1 = (data - np.mean(data))
     denominator = (res1.T.dot(res1))
-    #return 1 - numerator/denominator
-    return numerator/denominator
+    return 1 - numerator/denominator
+    
 
 def plot_it(x,y,model,franke_data):
     '''

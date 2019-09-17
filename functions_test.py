@@ -23,7 +23,7 @@ def test_Poly2DFit():
     create_fit.x = x
     create_fit.y = y
     create_fit.order = 3
-    create_fit.matDesign()
+    create_fit.matDesign(x,y)
     design = create_fit._design
     #assigning data to fit to with X.beta
     data = design.dot(par)
