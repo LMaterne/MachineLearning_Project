@@ -3,6 +3,7 @@ import numpy as np
 import subprocess
 import warnings
 from sklearn.model_selection import train_test_split
+from sklearn.linear_model import Lasso
 
 
 class Poly2DFit:
@@ -32,7 +33,7 @@ class Poly2DFit:
         self.r2 = 0
         self.variance = 0
         self. bias = 0
-        
+
 
     def generateSample(self, n, mean = 0., var = 1):
         """
@@ -40,14 +41,14 @@ class Poly2DFit:
         and z = f(x,y) + eps with f the Franke function and eps normal distributed with mean and var
 
         """
-        
+
         #use same random numbers each time to make evaulating easier
-        #create x and y randomly 
+        #create x and y randomly
         self.x, self.y = np.random.rand(2,n)
-        
+
         #pass the x and y data into the Franke function this will be used later in evaluating the model
         self.data = FrankeFunction(self.x, self.y) + np.sqrt(var)*np.random.randn(n) + mean
-    
+
     def givenData(self, x, y, f):
         """
         stores given 2D data in class
@@ -68,32 +69,32 @@ class Poly2DFit:
         self.kfold = True
         kinv = 1.0/k
         #determin length
-        
+
         np.random.seed(0)
         np.random.shuffle(self.x)
         np.random.seed(0)
         np.random.shuffle(self.y)
         np.random.seed(0)
         np.random.shuffle(self.data)
-        
+
         x_folds = np.array_split(self.x, k)
         y_folds = np.array_split(self.y, k)
         data_folds = np.array_split(self.data, k)
-        
-        
+
+
         for i in range(k):
             xtrain = np.delete(x_folds, i , 0)
             ytrain = np.delete(x_folds, i , 0)
             datatrain = np.delete(data_folds, i , 0)
-            
+
             self.xtrain = np.concatenate(xtrain)
             self.xtest  = x_folds[i]
             self.ytrain = np.concatenate(ytrain)
             self.ytest  = y_folds[i]
             self.datatrain = np.concatenate(datatrain)
             self.datatest  = data_folds[i]
-            
-            
+
+
             Poly2DFit.run_fit(self, Pol_order, regtype, lam)
             Poly2DFit.evaluate_model(self, self.k)
 
@@ -119,6 +120,8 @@ class Poly2DFit:
             Poly2DFit._linReg(self)
         if regtype == 'RIDGE':
             Poly2DFit._ridgeReg(self)
+        if regtype == 'LASSO':
+            Poly2DFit._lasso(self)
 
         return self.par, self.par_var
 
@@ -166,30 +169,20 @@ class Poly2DFit:
             self.par = inverse.dot(self._design.T).dot(self.datatrain)
         else:
             self.par = inverse.dot(self._design.T).dot(self.data)
-       
-
-        self.par = inverse.dot(self._design.T).dot(self.data)
-
 
     def _lasso(self):
         """
         Creates a model using Lasso, Returns the estimated output z
         """
         lasso = Lasso(alpha=self.lam, max_iter=10e5)
-        # creates the Lasso parameters
-        # Using train set X, f
-        self.clf_l = lasso.fit(self.design,self.data)
-        # Using test set f to predict f
-        self.f_tilde_lasso = self.clf_l.predict(self.data)
-        """
-        might use these to get an overview.
-        train_score=lasso.score(X_train,z_train)
-        test_score=lasso.score(X_test,z_test)
-        coeff_used = np.sum(lasso.coef_!=0)
-        print("training score:", train_score)
-        print("test score: ", test_score)
-        print("number of features used: ", coeff_used)
-        """
+        # creates the Lasso parameters, beta
+        if self.kfold:
+            clf =  lasso.fit(self._design,self.datatrain)
+            self.par = clf.coef_
+        else:
+            clf =  lasso.fit(self._design,self.data)
+            self.par = clf.coef_
+        self.par_var = 0
 
     def matDesign (self, x , y , indVariables = 2):
         '''This is a function to set up the design matrix
@@ -259,11 +252,11 @@ class Poly2DFit:
                         row = row + 1
                         #print(row)
 
-                        
-                    k = k + 1                     
-                col_G = col_G + 1            
-                j = j + 1 
- 
+
+                    k = k + 1
+                col_G = col_G + 1
+                j = j + 1
+
     def evaluate_model(self, k = 1):
 
         """
@@ -273,7 +266,7 @@ class Poly2DFit:
         """
         p = self.par.shape[0]
 
-        
+
         if self.kfold:
             #model with training input
             model_train = self._design.dot(self.par)
@@ -281,12 +274,12 @@ class Poly2DFit:
             Poly2DFit.matDesign(self, self.xtest, self.ytest)
             #model with training and test input
             model_test = self._design.dot(self.par)
-            
+
             expect_model = np.mean(model_test)
-    
+
             self.mse += MSE(self.datatest, model_test)/self.k
             self.r2 += R2(self.datatest, model_test)/self.k
-          
+
 
             #self.bias = MSE(FrankeFunction(self.xtest, self.ytest), expect_model) # explain this in text why we use FrankeFunction
             self.variance += MSE(model_test, expect_model)/self.k
@@ -296,7 +289,7 @@ class Poly2DFit:
 
             self.bias += (self.mse - self.variance - np.var([self.x, self.y]))/self.k
             self.model += np.append(model_train, model_test)/self.k
-        
+
         else:
 
             self.model = self._design.dot(self.par)
@@ -306,11 +299,11 @@ class Poly2DFit:
             self.mse = MSE(self.data, self.model)
             self.r2 = R2(self.data, self.model)
 
-          
+
             #self.bias = MSE(FrankeFunction(self.x, self.y), expect_model) # explain this in text why we use FrankeFunction
             self.variance = MSE(self.model, expect_model)
             self.bias = self.mse - self.variance - np.var([self.x, self.y])
-       
+
 
         return self.x, self.y, self.model
 
