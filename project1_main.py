@@ -108,7 +108,7 @@ def benchmarking( regressiontype, n = 500, order = 7, lam = 0.1, kfold = 0,
 def main():
 
     ks = [0, 5, 10]
-    lam = [0.01, 0.1, 1]
+    lam = [0, 0.01, 0.1, 1]
     max_order = 6
     samples = 100
 
@@ -122,7 +122,7 @@ def main():
             toi = toi_append(toi, temp, 'RIDGE', l, k)
 
     #filter for lam
-    lam_filter = (toi['lambda'] == 0.1 ) | (toi['lambda'] == 0)
+    lam_filter =  (toi['lambda'] == 0) #(toi['lambda'] == 0.1 ) |
     #filter for Ridge
     ridge_filter = toi['Regression type'] == 'RIDGE'
     

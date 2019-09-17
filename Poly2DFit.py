@@ -166,10 +166,6 @@ class Poly2DFit:
             self.par = inverse.dot(self._design.T).dot(self.datatrain)
         else:
             self.par = inverse.dot(self._design.T).dot(self.data)
-       
-
-        self.par = inverse.dot(self._design.T).dot(self.data)
-
 
     def _lasso(self):
         """
