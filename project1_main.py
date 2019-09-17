@@ -4,6 +4,8 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+import time
+
 def toi_append(data, info, regressiontype, lam, kFold):
     n = len(info['power'].to_numpy())
     app = pd.DataFrame(columns = ['Regression type','lambda','kFold',
@@ -196,4 +198,8 @@ def main():
 
 
 if __name__ == "__main__":
+    start = time.perf_counter()
     main()
+    finish = time.perf_counter()
+    print("Elapsed time: ", finish - start, "s")
+
