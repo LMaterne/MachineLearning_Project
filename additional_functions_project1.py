@@ -68,7 +68,6 @@ def plot_it(x,y,model,franke_data):
 def load_terrain(imname):
 # Load the terrain
     terrain = imread('{:}.tif'.format(imname))
-    terraindata = scipy.misc.imread('{:}.tif'.format(imname))
 # Show the terrain
     plt.figure()
     plt.title('Terrain over Norway')
@@ -76,5 +75,6 @@ def load_terrain(imname):
     plt.xlabel('X')
     plt.ylabel('Y')
     plt.show()
-# return the terrain for plotting and the data using scipy
-    return terrain,terraindata
+# return the terrain data,
+# which is a matrix with values corresponding to f(x,y) - height
+    return terrain
