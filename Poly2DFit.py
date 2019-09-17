@@ -30,6 +30,7 @@ class Poly2DFit:
         #set seed for comparability
         np.random.seed(159)
         self.mse = 0
+        self.mse_train = 0
         self.r2 = 0
         self.variance = 0
         self. bias = 0
@@ -76,27 +77,32 @@ class Poly2DFit:
         np.random.shuffle(self.y)
         np.random.seed(0)
         np.random.shuffle(self.data)
-
+   
         x_folds = np.array_split(self.x, k)
         y_folds = np.array_split(self.y, k)
         data_folds = np.array_split(self.data, k)
-
-
-        for i in range(k):
-            xtrain = np.delete(x_folds, i , 0)
-            ytrain = np.delete(x_folds, i , 0)
-            datatrain = np.delete(data_folds, i , 0)
-
-            self.xtrain = np.concatenate(xtrain)
-            self.xtest  = x_folds[i]
-            self.ytrain = np.concatenate(ytrain)
-            self.ytest  = y_folds[i]
-            self.datatrain = np.concatenate(datatrain)
-            self.datatest  = data_folds[i]
-
-
+        
+        #allow simple splitting in test and training data
+        if k ==  1 :
+            self.xtrain, self.xtest, self.ytrain, self.ytest, self.datatrain, self.datatest = train_test_split(self.x, self.y, self.data, shuffle = True, test_size = 4/5)
             Poly2DFit.run_fit(self, Pol_order, regtype, lam)
-            Poly2DFit.evaluate_model(self, self.k)
+            self.mse_train += Poly2DFit.evaluate_model(self, self.k)
+        else:
+            for i in range(k):
+                xtrain = np.delete(x_folds, i , 0)
+                ytrain = np.delete(x_folds, i , 0)
+                datatrain = np.delete(data_folds, i , 0)
+
+                self.xtrain = np.concatenate(xtrain)
+                self.xtest  = x_folds[i]
+                self.ytrain = np.concatenate(ytrain)
+                self.ytest  = y_folds[i]
+                self.datatrain = np.concatenate(datatrain)
+                self.datatest  = data_folds[i]
+
+
+                Poly2DFit.run_fit(self, Pol_order, regtype, lam)
+                self.mse_train += Poly2DFit.evaluate_model(self, self.k)
 
 
     def run_fit(self, Pol_order, regtype, lam = 0.1):
@@ -174,7 +180,7 @@ class Poly2DFit:
         """
         Creates a model using Lasso, Returns the estimated output z
         """
-        lasso = Lasso(alpha=self.lam, max_iter=10e5)
+        lasso = Lasso(alpha=self.lam, max_iter=10e7)
         # creates the Lasso parameters, beta
         if self.kfold:
             clf =  lasso.fit(self._design,self.datatrain)
@@ -270,6 +276,7 @@ class Poly2DFit:
         if self.kfold:
             #model with training input
             model_train = self._design.dot(self.par)
+            MSE_train = MSE(self.datatrain, model_train)
 
             Poly2DFit.matDesign(self, self.xtest, self.ytest)
             #model with training and test input
@@ -289,6 +296,9 @@ class Poly2DFit:
 
             self.bias += (self.mse - self.variance - np.var([self.x, self.y]))/self.k
             self.model += np.append(model_train, model_test)/self.k
+            
+            #returning the  weighted MSE on training data
+            return MSE_train/self.k
 
         else:
 
@@ -304,8 +314,6 @@ class Poly2DFit:
             self.variance = MSE(self.model, expect_model)
             self.bias = self.mse - self.variance - np.var([self.x, self.y])
 
-
-        return self.x, self.y, self.model
 
 
     def plot_function(self):
