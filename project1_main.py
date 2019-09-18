@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import time
 
 import time
 
@@ -202,4 +203,3 @@ if __name__ == "__main__":
     main()
     finish = time.perf_counter()
     print("Elapsed time: ", finish - start, "s")
-
