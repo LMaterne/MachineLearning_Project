@@ -115,8 +115,8 @@ def main():
     ks = [0, 1, 5, 10]
     lam = [10**(-5), 10**(-3), 10**(-1)]
 
-    max_order = 10
-    samples = 1800*3600
+    max_order = 15
+    samples = 10**5
 
     toi = pd.DataFrame(columns = ['Regression type','lambda','kFold',
                                         'Complexity','Value', 'Metric'] )
