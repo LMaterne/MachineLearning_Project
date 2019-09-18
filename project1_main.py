@@ -5,6 +5,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import time
 
+import time
+
 def toi_append(data, info, regressiontype, lam, kFold):
     n = len(info['power'].to_numpy())
     app = pd.DataFrame(columns = ['Regression type','lambda','kFold',

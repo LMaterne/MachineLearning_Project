@@ -28,7 +28,7 @@ class Poly2DFit:
         """
         self.kfold = False
         #set seed for comparability
-        np.random.seed(159)
+        np.random.seed(1709)
         self.mse = 0
         self.mse_train = 0
         self.r2 = 0
@@ -69,40 +69,35 @@ class Poly2DFit:
         self.k = k
         self.kfold = True
         kinv = 1.0/k
-        #determin length
-
+        #make sure all is set to 0
+        self.mse = 0
+        self.mse_train = 0
+        self.r2 = 0
+        self.variance = 0
+        self. bias = 0
+        
         np.random.seed(0)
         np.random.shuffle(self.x)
         np.random.seed(0)
         np.random.shuffle(self.y)
         np.random.seed(0)
         np.random.shuffle(self.data)
-   
-        x_folds = np.array_split(self.x, k)
-        y_folds = np.array_split(self.y, k)
-        data_folds = np.array_split(self.data, k)
-        
-        #allow simple splitting in test and training data
-        if k ==  1 :
-            self.xtrain, self.xtest, self.ytrain, self.ytest, self.datatrain, self.datatest = train_test_split(self.x, self.y, self.data, shuffle = True, test_size = 4/5)
+
+        x_folds = np.array(np.array_split(self.x, k + 1))        
+        y_folds = np.array_split(self.y, k + 1)
+        data_folds = np.array_split(self.data, k + 1)
+        for i in range(k + 1):
+
+            self.xtrain = np.delete(x_folds, i , 0)[0].flatten()
+            self.xtest  = x_folds[i]
+            self.ytrain = np.delete(y_folds, i , 0)[0].flatten()
+            self.ytest  = y_folds[i]
+            self.datatrain = np.delete(data_folds, i , 0)[0].flatten()
+            self.datatest  = data_folds[i]
+
+
             Poly2DFit.run_fit(self, Pol_order, regtype, lam)
             self.mse_train += Poly2DFit.evaluate_model(self, self.k)
-        else:
-            for i in range(k):
-                xtrain = np.delete(x_folds, i , 0)
-                ytrain = np.delete(x_folds, i , 0)
-                datatrain = np.delete(data_folds, i , 0)
-
-                self.xtrain = np.concatenate(xtrain)
-                self.xtest  = x_folds[i]
-                self.ytrain = np.concatenate(ytrain)
-                self.ytest  = y_folds[i]
-                self.datatrain = np.concatenate(datatrain)
-                self.datatest  = data_folds[i]
-
-
-                Poly2DFit.run_fit(self, Pol_order, regtype, lam)
-                self.mse_train += Poly2DFit.evaluate_model(self, self.k)
 
 
     def run_fit(self, Pol_order, regtype, lam = 0.1):
@@ -136,16 +131,18 @@ class Poly2DFit:
         calculates the estimated parameters of an OLS
         outputs variance as the diagonal entries of (X^TX)^-1
         """
-        XTX = self._design.T.dot(self._design)
+        XTX = np.array(self._design.T.dot(self._design), dtype=np.float64)
         #try to use standard inversion, otherwise use SVD
         try:
             inverse = np.linalg.inv(XTX)
+        
         except:
-            print("in exception")
-            raise warnings.warn("Singular Matrix: Using SVD", Warning)
+            warnings.warn("Singular Matrix: Using SVD", Warning)
             U, S, VT = np.linalg.svd(XTX)
-            inverse = VT.T.dot(np.diag(1/S)).dot(U.T)
-
+            sinv = np.zeros(S.shape)
+            sinv[np.abs(S) > 10e-20 ] =  1./S[np.abs(S) > 10e-20 ]
+            inverse = (VT.T*sinv).dot(U.T)
+        
         self.par_var = np.diag(inverse)
         if self.kfold:
             self.par = inverse.dot(self._design.T).dot(self.datatrain)
@@ -167,7 +164,8 @@ class Poly2DFit:
         except:
             warnings.warn("Singular Matrix: Using SVD", Warning)
             U, S, VT = np.linalg.svd(XTX_lam)
-            inverse = VT.T.dot(np.diag(1/S)).dot(U.T)
+            sinv = np.where( (np.abs(S) < 10e-25) | (S == 0), 0, 1./S)
+            inverse = (VT.T*sinv).dot(U.T)
 
         self.par_var = np.diag(inverse)
 
@@ -180,7 +178,7 @@ class Poly2DFit:
         """
         Creates a model using Lasso, Returns the estimated output z
         """
-        lasso = Lasso(alpha=self.lam, max_iter=10e7)
+        lasso = Lasso(alpha=self.lam, max_iter=10e5,tol=0.001)
         # creates the Lasso parameters, beta
         if self.kfold:
             clf =  lasso.fit(self._design,self.datatrain)
@@ -195,73 +193,30 @@ class Poly2DFit:
         the inputs are :dataSet, the n datapoints, x and y data in a nx2 matrix
                         order, is the order of the coefficients,
                         indVariables, the number of independant variables
-
-        i.e if order = 3 and indVariables = 1, then the number of coefficients THIS function will create is 4. (1 x x**2 x**3)
-        or  if order = 2 and indVariables = 2, then the number of coefficients THIS function will create is 6. (1 x y xy x**2 y**2)
-
-        IMPORTANT NOTE: this works only for indVariables = 1, 2 at the moment
         the outputs are X
         '''
-        #stack data
-        dataSet = np.vstack((x, y)).T
 
-        # if statement for the case with one independant variable
-        if indVariables == 1:
-            num_coeff = int(self.order + 1)
+        # find the number of coefficients we will end up with
+        num_coeff = int((self.order + 1)*(self.order + 2)/2)
 
-            # set up the Design matrix
-            #n = np.int(np.size(dataSet))
-            #matX = np.zeros((n,coefficients))
+        #find the number of rows in dataSet
+        n = np.shape(x)[0]
+        # create an empty matrix of zeros
+        self._design = np.zeros((n,num_coeff))
 
-            n = np.shape(dataSet)[0]
-            # loop through all the other columns as powes of dataSet
+        #fast assignment
+        temp = self._design.T
+        current_col = 0
+        
+        for p in range(self.order + 1):
+            for i in range(p + 1):
+                temp[current_col] = x**(p-i) * y**(i)
+                current_col += 1
+        
+        self._design = temp.T
+        
 
-            self._design = np.zeros((n,num_coeff))
-            i = 0 #counter
-            while i < num_coeff:
-
-                self._design[:,i] = (dataSet[i])**i
-                i=i+1
-
-
-        ###########################################################################################################
-
-        # if statement for the case with two independant variables
-
-        if (indVariables == 2):
-            # find the number of coefficients we will end up with
-            num_coeff = int((self.order + 1)*(self.order + 2)/2)
-            #print ('The number of coefficients are: ',num_coeff)
-
-            #find the number of rows in dataSet
-            n = np.shape(dataSet)[0]
-            #print ('The number of rows in the design matrix is', n)
-            # create an empty matrix of zeros
-            self._design = np.zeros((n,num_coeff))
-
-
-
-            col_G = 0 # global columns
-            tot_rows = n
-            #print ('total rows = ',tot_rows)
-
-            j = 0
-            # loop through each j e.g 1,2,3,4,5,6
-            while j < num_coeff:
-                k = 0
-                #loop through each row
-                while k <= j:
-                    row = 0
-                    #loop through each item (each column in the row)
-                    while row < tot_rows:
-                        self._design[row,col_G] = ((dataSet[row,0])**(j-k)) * ((dataSet[row,1])**k)
-                        row = row + 1
-                        #print(row)
-
-
-                    k = k + 1
-                col_G = col_G + 1
-                j = j + 1
+ 
 
     def evaluate_model(self, k = 1):
 
@@ -283,19 +238,18 @@ class Poly2DFit:
             model_test = self._design.dot(self.par)
 
             expect_model = np.mean(model_test)
-
-            self.mse += MSE(self.datatest, model_test)/self.k
+            mse_temp = MSE(self.datatest, model_test)
+            self.mse += mse_temp/self.k
             self.r2 += R2(self.datatest, model_test)/self.k
 
 
             #self.bias = MSE(FrankeFunction(self.xtest, self.ytest), expect_model) # explain this in text why we use FrankeFunction
-            self.variance += MSE(model_test, expect_model)/self.k
+            var_temp = MSE(model_test, expect_model)
+            self.variance += var_temp/self.k
             #alternative implementaton
             # MSE = bias + variance + data_var <-> bias = MSE - varinace - data_var
             #what is data var?
-
-            self.bias += (self.mse - self.variance - np.var([self.x, self.y]))/self.k
-            self.model += np.append(model_train, model_test)/self.k
+            self.bias += (mse_temp - var_temp - np.var([self.x, self.y]))/self.k
             
             #returning the  weighted MSE on training data
             return MSE_train/self.k
