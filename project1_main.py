@@ -237,7 +237,6 @@ def main():
     for i, ax in enumerate(axes):
         xax = ax.get_xlim()
         x,y  = duplicate_axis(ax)
-        print(x)
         plt.figure(figsize=(10,10))
         if i <= len(ks):
             plt.plot(x,y)
