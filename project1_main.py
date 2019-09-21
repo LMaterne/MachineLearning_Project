@@ -109,13 +109,70 @@ def benchmarking( regressiontype, n = 500, order = 7, lam = 0.1, kfold = 0,
 
     return table_of_info
 
+def duplicate_axis(ax):
+    l = ax.lines[0]
+    iter_line = True
+    it = 0
+    x = l.get_xdata()
+    y = l.get_ydata()
+    it += 1
+    while iter_line:
+        try:
+            l = ax.lines[it]
+            xt = l.get_xdata()
+            yt = l.get_ydata()
+            it += 1
+            x = np.vstack([x,xt])
+            y = np.vstack([y,yt])
+        except:
+            iter_line = False
+    return x, y
+
+def plotting(toi, row, col, filename, split = False, ylabel ='MSE', shary = True):
+    """
+    gives the table of informations, toi, to facetgrid (apply filter in call)
+    spans dimension by col, row with toi column names
+    saves as filename
+    if split is True: store each subplot seperatly
+    if shary is True: shared y axes (only in split)
+    """
+    max_order = toi['Complexity'].max()
+    g = sns. FacetGrid(toi, row =row, col=col, hue ='Metric', margin_titles =True)
+    g.map(plt.plot, 'Complexity', 'Value')
+    g.add_legend()
+    g.set_axis_labels('Polynom Order', ylabel)
+    g.set(xticks = np.arange(0, max_order +1, 2))
+    g.savefig(filename + '.pdf')
+
+    if split:
+        labels = toi['Metric'].unique()
+        axes = g.axes.flat
+        for i,ax in enumerate(axes):
+            title =ax.get_title()
+            xax = ax.get_xlim()
+            yax =ax.get_ylim()
+            x,y  = duplicate_axis(ax)
+
+            f = plt.figure(figsize=(10,10))
+            for k in range(len(x)):
+                plt.plot(x[k], y[k], label = labels[k])
+            plt.xlim(xax)
+            if shary:
+                plt.ylim(yax)
+            plt.ylabel(ylabel, fontsize = 24)
+            plt.xlabel('Polynom Order', fontsize = 24)
+            plt.legend(loc='best' , fontsize = 24)
+            plt.savefig(fname=filename +str(i)+'_kf' +title[-2:], dpi='figure', format= 'pdf')
+
+
+
 
 def main():
 
     ks = [0, 1, 5, 10]
     lam = [10**(-5), 10**(-3), 10**(-1)]
 
-    max_order = 15
+    max_order = 12
     samples = 10**5
 
     toi = pd.DataFrame(columns = ['Regression type','lambda','kFold',
@@ -146,6 +203,7 @@ def main():
             
             
             
+            
     #filter for lam
     lam_filter =  ((toi['lambda'] == 0) | (toi['lambda'] == 0.001)) & ((toi['Metric'] != 'R2') & (toi['Metric'] != 'MSE_train'))
     #filter for Ridge
@@ -156,46 +214,45 @@ def main():
     r2_filter = toi['Metric'] =='R2'
     #book filter
     book_filter = ((toi['Metric']=='MSE') | (toi['Metric']=='MSE_train')) &  ((toi['lambda'] == 0) | (toi['lambda'] == 0.001)) & (toi['kFold'] != 0)
-
+    
     #compare kfold for different regressions
-    g = sns. FacetGrid(toi[lam_filter], row ='Regression type', col='kFold', hue ='Metric', margin_titles =True)
-    g.map(plt.plot, 'Complexity', 'Value')
-    g.add_legend()
-    g.set_axis_labels('Polynom Order', 'MSE')
-    g.set(xticks = np.arange(0, max_order +1, 2))
-    g.savefig('comp_fit.pdf')
-
-    #compare kfold and lambda for ridge
-    g = sns. FacetGrid(toi[ridge_filter], row ='lambda', col='kFold', hue ='Metric', margin_titles =True)
-    g.map(plt.plot, 'Complexity', 'Value')
-    g.set_axis_labels('Polynom Order', 'MSE')
-    g.add_legend()
-    g.set(xticks = np.arange(0, max_order +1, 2))
-    g.savefig('ridge_lam_vs_kfold.pdf')
-    
+    plotting(toi[lam_filter], row ='Regression type', col='kFold', filename = 'reg_types')
     #compare kfold and lambda for lasso
-    g = sns. FacetGrid(toi[lasso_filter], row ='lambda', col='kFold', hue ='Metric', margin_titles =True)
-    g.map(plt.plot, 'Complexity', 'Value')
-    g.set_axis_labels('Polynom Order', 'MSE')
-    g.add_legend()
-    g.set(xticks = np.arange(0, max_order +1, 2))
-    g.savefig('lasso_lam_vs_kfold.pdf')
-    
+    plotting(toi[lasso_filter], row ='lambda', col='kFold', filename = 'lasso_lam_vs_kfold')
     #compare kfold and lambda fore ridge
+    plotting(toi[ridge_filter], row ='lambda', col='kFold', filename = 'ridge_lam_vs_kfold')
+    #make plot from book
+    plotting(toi[book_filter], row ='Regression type', col='kFold', filename='train_vs_test', split = True, shary=True)
+    
+    #make r2 plot and split (no shared y)
     g = sns. FacetGrid(toi[r2_filter], row ='lambda', col='kFold', hue ='Regression type', margin_titles =True)
     g.map(plt.plot, 'Complexity', 'Value')
     g.set_axis_labels('Polynom Order', 'R2')
     g.add_legend()
     g.set(xticks = np.arange(0, max_order +1, 2))
     g.savefig('r2.pdf')
+    labels = toi['Metric'].unique()
+    axes = g.axes.flat
+    labels = ['RIDGE', 'LASSO']
+    for i, ax in enumerate(axes):
+        xax = ax.get_xlim()
+        x,y  = duplicate_axis(ax)
+        print(x)
+        plt.figure(figsize=(10,10))
+        if i <= len(ks):
+            plt.plot(x,y)
+        else:
+            for k in range(len(x)):
+        
+                plt.plot(x[k], y[k], label = labels[k])
+            plt.legend(loc='best' , fontsize = 24)
 
-    #make plot from book
-    g = sns. FacetGrid(toi[book_filter], row ='Regression type', col='kFold', hue ='Metric', margin_titles =True)
-    g.map(plt.plot, 'Complexity', 'Value')
-    g.set_axis_labels('Polynom Order', 'MSE')
-    g.add_legend()
-    g.set(xticks = np.arange(0, max_order +1, 2))
-    g.savefig('train_vs_test.pdf')
+        plt.xlim(xax)
+        plt.ylabel('R2', fontsize = 24)
+        plt.xlabel('Polynom Order', fontsize = 24)
+        plt.savefig(fname ='r2' +str(i), dpi='figure', format= 'pdf')
+
+
 
 
 if __name__ == "__main__":
