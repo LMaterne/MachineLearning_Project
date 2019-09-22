@@ -40,6 +40,24 @@ def main():
     # plot results of benchmarking       
     plotting(toi, folder='./Benchmark/')
 
+    terrain = load_terrain('./Terraindata/yellowstone2.tif')
+    xl, yl = terrain.shape
+    points = np.zeros((xl*yl, 3))
+    #pixelpositions or better linspace?
+    x_ax = np.arange(0,xl)
+    y_ax = np.arange(0,yl)
+    #flatten 2D array
+    count = 0
+    for x in x_ax:
+        for y in y_ax:
+            points[count] = [x, y, terrain[x,y]]
+            count += 1
+    x,y,z = points.T
+    terrain_fit = Poly2DFit.Poly2DFit()
+    terrain_fit.givenData(x, y, z)
+    
+
+
 
 
 
