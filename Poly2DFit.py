@@ -68,7 +68,6 @@ class Poly2DFit:
         """
         self.k = k
         self.kfold = True
-        kinv = 1.0/k
         #make sure all is set to 0
         self.mse = 0
         self.mse_train = 0

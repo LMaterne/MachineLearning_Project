@@ -2,7 +2,7 @@ import Poly2DFit
 import numpy as np 
 import pytest
 from sklearn. metrics import r2_score, mean_squared_error
-from sklearn.linear_model import Ridge, LinearRegression
+from sklearn.linear_model import Ridge, LinearRegression, RidgeCV, LassoCV
 from additional_functions_project1 import R2, MSE
 """
 run pytest command from comandline 
@@ -70,6 +70,7 @@ def test_against_sklearn():
     sk_RIDGE = Ridge(alpha = 0.01,fit_intercept = False, solver ='svd').fit(X,z).coef_
     assert np.abs(par_OLS -sk_OLS).max() == pytest.approx( 0 ,  abs = 1e-9 ) 
     assert np.abs(par_RIDGE -sk_RIDGE).max() == pytest.approx( 0 ,  abs = 1e-9 ) 
+
 
 
 
