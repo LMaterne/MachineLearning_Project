@@ -2,6 +2,7 @@ import Poly2DFit
 import numpy as np 
 import pytest
 from sklearn. metrics import r2_score, mean_squared_error
+from sklearn.linear_model import Ridge, LinearRegression
 from additional_functions_project1 import R2, MSE
 """
 run pytest command from comandline 
@@ -57,6 +58,18 @@ def test_metrices():
     assert np.abs(MSE(data, 2*x) - mean_squared_error(data, 2*x)) == pytest.approx(0)
     #test R2
     assert np.abs(R2(data, 2*x) - r2_score(data, 2*x)) == pytest.approx(0)
+
+def test_against_sklearn():
+    fit = Poly2DFit.Poly2DFit()
+    fit.generateSample(1000)
+    par_OLS, _  = fit.run_fit(3,'OLS')
+    par_RIDGE,_  = fit.run_fit(3,'RIDGE', 0.01)
+    X = fit._design
+    z = fit.data
+    sk_OLS = LinearRegression(fit_intercept = False).fit(X,z).coef_
+    sk_RIDGE = Ridge(alpha = 0.01,fit_intercept = False, solver ='svd').fit(X,z).coef_
+    assert np.abs(par_OLS -sk_OLS).max() == pytest.approx( 0 ,  abs = 1e-9 ) 
+    assert np.abs(par_RIDGE -sk_RIDGE).max() == pytest.approx( 0 ,  abs = 1e-9 ) 
 
 
 
