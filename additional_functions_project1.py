@@ -207,7 +207,7 @@ def plotting_mse(toi, row, col, filename, split = False, ylabel ='MSE', shary = 
     """
     max_order = toi['Complexity'].max()
     g = sns. FacetGrid(toi, row =row, col=col, hue ='Metric', margin_titles =True)
-    g.map(plt.plot, 'Complexity', 'Value').set(yscale ='log')
+    g.map(plt.plot, 'Complexity', 'Value')
     g.add_legend()
     g.set_axis_labels('Polynom Order', ylabel)
     g.set(xticks = np.arange(0, max_order +1, 2))
@@ -285,4 +285,4 @@ def plotting(toi, folder = ''):
     plotting_mse(toi[book_filter], row ='Regression type', col='kFold', filename=folder +'train_vs_test', split = True, shary=True)
     plotting_mse(toi[book_filter], row ='Regression type', col='kFold', filename=folder +'train_vs_test_no_share', split = True, shary=False)
     #make r2 plot and split (no shared y)
-    plotting_r2(toi[r2_filter], filename = folder +'reg_types')
+    plotting_r2(toi[r2_filter], filename = folder +'r2')
