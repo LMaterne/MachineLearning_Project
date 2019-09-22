@@ -1,6 +1,7 @@
 import Poly2DFit
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from additional_functions_project1 import benchmarking, toi_append, plotting, load_terrain
 import time
 
@@ -8,7 +9,7 @@ def main():
 
     ks = [0, 1, 5, 10]
     lam = [10**(-5), 10**(-3), 10**(-1)]
-
+    
     max_order = 12
     samples = 5*10**5
 
@@ -39,9 +40,19 @@ def main():
             toi = toi_append(toi, temp, 'LASSO', l, k)     
     # plot results of benchmarking       
     plotting(toi, folder='./Benchmark/')
-
-    terrain = load_terrain('./Terraindata/yellowstone2.tif')
+    
+    terrain = load_terrain('./Terraindata/yellowstone2')
     xl, yl = terrain.shape
+    #quter of array
+    xl = xl//2
+    yl = yl//2
+
+    c = plt.imshow(terrain[:xl,:yl], cmap='gray')
+    plt.colorbar(c, label = 'Hight')
+    plt.xlabel('X')
+    plt.ylabel('Y')
+    plt.savefig('./Terraindata/yellowstone2_section')
+    plt.close('all')
     points = np.zeros((xl*yl, 3))
     #pixelpositions or better linspace?
     x_ax = np.arange(0,xl)
@@ -55,7 +66,16 @@ def main():
     x,y,z = points.T
     terrain_fit = Poly2DFit.Poly2DFit()
     terrain_fit.givenData(x, y, z)
+    par,_ = terrain_fit.run_fit(8, 'OLS', 0.01)
+    X = terrain_fit._design
+    fit_map = X.dot(par).reshape(xl,yl)
     
+    c = plt.imshow(fit_map, cmap='gray')
+    plt.colorbar(c, label = 'Hight')
+    plt.xlabel('X')
+    plt.ylabel('Y')
+    plt.savefig('./Terraindata/yellowstone2_LASSO')
+
 
 
 

@@ -177,7 +177,7 @@ class Poly2DFit:
         """
         Creates a model using Lasso, Returns the estimated output z
         """
-        lasso = Lasso(alpha=self.lam, max_iter=10e5,tol=0.001, precompute = True)
+        lasso = Lasso(alpha=self.lam, max_iter=10e5,tol=0.001, precompute = True, fit_intercept = False)
         # creates the Lasso parameters, beta
         if self.kfold:
             clf =  lasso.fit(self._design,self.datatrain)
