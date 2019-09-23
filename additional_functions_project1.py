@@ -76,14 +76,13 @@ def load_terrain(imname):
 # which is a matrix with values corresponding to f(x,y) - height
 #reducing terrain data
     sel = 4 #select every fourth
-    N = len(terrain[0,::sel]) # lengde kolonner
-    n = len(terrain[::sel,0]) # lengde antall rad
+    N = len(terrain[0,::sel]) # length reduced columns
+    n = len(terrain[::sel,0]) # length reduced rows
     NN = len(terrain[0,:]) # number of columns total
     nn = len(terrain[:,0]) # number of rows total
-
 #reducing by column
     reduced  = np.zeros((nn,N))
-    for i in range(nn-1):
+    for i in range(nn):
             reduced[i,:] = terrain[i,::sel]
 #reduce by rows
     reduced2 = np.zeros((n,N))
