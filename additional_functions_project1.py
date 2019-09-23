@@ -37,7 +37,7 @@ def R2(data, model):
     res1 = (data - np.mean(data))
     denominator = (res1.T.dot(res1))
     return 1 - numerator/denominator
-    
+
 
 def plot_it(x,y,model,franke_data):
     '''
@@ -74,7 +74,16 @@ def load_terrain(imname):
     plt.show()
 # return the terrain data,
 # which is a matrix with values corresponding to f(x,y) - height
-    return terrain
+#reducing terrain data
+    N = len(terrain[0][::4]) # number of columns in reduced matrix
+    n = len(terrain[::4][0]) # number of rows in reduced matrix
+#print(n,N), print(np.shape(terrain))
+    reduced  = np.zeros((n,N))
+
+    for i in range(n-1):
+        reduced[i] = terrain[i][::4]
+# print(reduced)
+    return reduced
 
 def toi_append(data, info, regressiontype, lam, kFold):
     n = len(info['power'].to_numpy())
@@ -253,7 +262,7 @@ def plotting_r2(toi, filename):
             plt.plot(x,y)
         else:
             for k in range(len(x)):
-        
+
                 plt.plot(x[k], y[k], label = labels[k])
             plt.legend(loc='best' , fontsize = 24)
 
@@ -274,7 +283,7 @@ def plotting(toi, folder = ''):
     r2_filter = toi['Metric'] =='R2'
     #book filter
     book_filter = ((toi['Metric']=='MSE') | (toi['Metric']=='MSE_train')) &  ((toi['lambda'] == 0) | (toi['lambda'] == 0.001)) & (toi['kFold'] != 0)
-    
+
     #compare kfold for different regressions
     plotting_mse(toi[lam_filter], row ='Regression type', col='kFold', filename = folder +'reg_types')
     #compare kfold and lambda for lasso
