@@ -82,18 +82,18 @@ class Poly2DFit:
         np.random.seed(0)
         np.random.shuffle(self.data)
 
-        x_folds = np.array(np.array_split(self.x, k + 1))
-        y_folds = np.array_split(self.y, k + 1)
-        data_folds = np.array_split(self.data, k + 1)
+        x_folds = np.array(np.array_split(self.x, k+1))
+        y_folds = np.array(np.array_split(self.y, k+1))
+        data_folds = np.array(np.array_split(self.data, k+1))
+   
         for i in range(k + 1):
 
-            self.xtrain = np.delete(x_folds, i , 0)[0].flatten()
+            self.xtrain = np.concatenate(np.delete(x_folds, i , 0))
             self.xtest  = x_folds[i]
-            self.ytrain = np.delete(y_folds, i , 0)[0].flatten()
+            self.ytrain = np.concatenate(np.delete(y_folds, i , 0))
             self.ytest  = y_folds[i]
-            self.datatrain = np.delete(data_folds, i , 0)[0].flatten()
+            self.datatrain = np.concatenate(np.delete(data_folds, i , 0))
             self.datatest  = data_folds[i]
-
 
             Poly2DFit.run_fit(self, Pol_order, regtype, lam)
             self.mse_train += Poly2DFit.evaluate_model(self, self.k)
