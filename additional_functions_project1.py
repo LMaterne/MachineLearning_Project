@@ -75,15 +75,21 @@ def load_terrain(imname):
 # return the terrain data,
 # which is a matrix with values corresponding to f(x,y) - height
 #reducing terrain data
-    N = len(terrain[0][::4]) # number of columns in reduced matrix
-    n = len(terrain[::4][0]) # number of rows in reduced matrix
-#print(n,N), print(np.shape(terrain))
-    reduced  = np.zeros((n,N))
+    sel = 4 #select every fourth
+    N = len(terrain[0,::sel]) # lengde kolonner
+    n = len(terrain[::sel,0]) # lengde antall rad
+    NN = len(terrain[0,:]) # number of columns total
+    nn = len(terrain[:,0]) # number of rows total
 
-    for i in range(n):
-        reduced[i] = terrain[i][::4]
-# print(reduced)
-    return reduced
+#reducing by column
+    reduced  = np.zeros((nn,N))
+    for i in range(nn-1):
+            reduced[i,:] = terrain[i,::sel]
+#reduce by rows
+    reduced2 = np.zeros((n,N))
+    for j in range(N):
+        reduced2[:,j] = reduced[::sel,j]
+    return reduced2
 
 def toi_append(data, info, regressiontype, lam, kFold):
     n = len(info['power'].to_numpy())
