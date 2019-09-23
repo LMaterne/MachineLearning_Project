@@ -80,7 +80,7 @@ def load_terrain(imname):
 #print(n,N), print(np.shape(terrain))
     reduced  = np.zeros((n,N))
 
-    for i in range(n-1):
+    for i in range(n):
         reduced[i] = terrain[i][::4]
 # print(reduced)
     return reduced
