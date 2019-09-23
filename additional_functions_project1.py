@@ -62,20 +62,19 @@ def plot_it(x,y,model,franke_data):
     plt.show()
 
 
-def load_terrain(imname):
+def load_terrain(imname, sel = 4): #select every fourth
 # Load the terrain
     terrain = imread('{:}.tif'.format(imname))
 # Show the terrain
     plt.figure()
-    plt.title('Terrain over Norway')
+    plt.title(imname)
     plt.imshow(terrain, cmap='gray')
     plt.xlabel('X')
     plt.ylabel('Y')
     plt.show()
 # return the terrain data,
 # which is a matrix with values corresponding to f(x,y) - height
-#reducing terrain data
-    sel = 4 #select every fourth
+#reducing terrain data   
     N = len(terrain[0,::sel]) # length reduced columns
     n = len(terrain[::sel,0]) # length reduced rows
     NN = len(terrain[0,:]) # number of columns total
