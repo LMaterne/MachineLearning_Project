@@ -74,7 +74,7 @@ class Poly2DFit:
         self.r2 = 0
         self.variance = 0
         self. bias = 0
-        
+
         np.random.seed(0)
         np.random.shuffle(self.x)
         np.random.seed(0)
@@ -82,7 +82,7 @@ class Poly2DFit:
         np.random.seed(0)
         np.random.shuffle(self.data)
 
-        x_folds = np.array(np.array_split(self.x, k + 1))        
+        x_folds = np.array(np.array_split(self.x, k + 1))
         y_folds = np.array_split(self.y, k + 1)
         data_folds = np.array_split(self.data, k + 1)
         for i in range(k + 1):
@@ -134,15 +134,16 @@ class Poly2DFit:
         #try to use standard inversion, otherwise use SVD
         try:
             inverse = np.linalg.inv(XTX)
-        
+
         except:
             warnings.warn("Singular Matrix: Using SVD", Warning)
             U, S, VT = np.linalg.svd(XTX)
             sinv = np.zeros(S.shape)
             sinv[np.abs(S) > 10e-20 ] =  1./S[np.abs(S) > 10e-20 ]
             inverse = (VT.T*sinv).dot(U.T)
-        
+
         self.par_var = np.diag(inverse)
+        self.confidence = 2*np.sqrt(self.par_var)
         if self.kfold:
             self.par = inverse.dot(self._design.T).dot(self.datatrain)
         else:
@@ -167,7 +168,7 @@ class Poly2DFit:
             inverse = (VT.T*sinv).dot(U.T)
 
         self.par_var = np.diag(inverse)
-
+        self.confidence = 2*np.sqrt(self.par_var)
         if self.kfold:
             self.par = inverse.dot(self._design.T).dot(self.datatrain)
         else:
@@ -206,16 +207,16 @@ class Poly2DFit:
         #fast assignment
         temp = self._design.T
         current_col = 0
-        
+
         for p in range(self.order + 1):
             for i in range(p + 1):
                 temp[current_col] = x**(p-i) * y**(i)
                 current_col += 1
-        
-        self._design = temp.T
-        
 
- 
+        self._design = temp.T
+
+
+
 
     def evaluate_model(self, k = 1):
 
@@ -249,7 +250,7 @@ class Poly2DFit:
             # MSE = bias + variance + data_var <-> bias = MSE - varinace - data_var
             #what is data var?
             self.bias += (mse_temp - var_temp - np.var([self.x, self.y]))/self.k
-            
+
             #returning the  weighted MSE on training data
             return MSE_train/self.k
 
