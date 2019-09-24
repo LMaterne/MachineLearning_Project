@@ -67,11 +67,13 @@ def load_terrain(imname):
     terrain = imread('{:}.tif'.format(imname))
 # Show the terrain
     plt.figure()
-    plt.title('Terrain over Norway')
-    plt.imshow(terrain, cmap='gray')
+    plt.title(imname)
+    c = plt.imshow(terrain, cmap='gray')
+    plt.colorbar(c, label = 'Hight')
     plt.xlabel('X')
     plt.ylabel('Y')
-    plt.show()
+    plt.savefig(imname)
+    plt.close('all')
 # return the terrain data,
 # which is a matrix with values corresponding to f(x,y) - height
     return terrain
@@ -163,7 +165,73 @@ def benchmarking( regressiontype, n = 500, order = 7, lam = 0.1, kfold = 0,
         for m in np.arange(0,num_of_p):
             coef_matrix.iloc[i,m] = fit_object.par[m]
 
+        del fit_object
 
+    if display_info:
+        pd.options.display.float_format = '{:,.2g}'.format
+        print (table_of_info)
+        print (coef_matrix)
+
+    if plot_info:
+        title = regressiontype +' Regression Info'
+        if regressiontype != 'OLS':
+            title += ' $\lambda$ = %.2f' % lam
+        plot_stats(table_of_info,title )
+
+    return table_of_info
+
+def terrain( regressiontype, x,y,z, order = 7, lam = 0.1, kfold = 0,
+                 display_info = False, plot_info = False, plot_fit =False, save_file = False):
+
+    #Initialize a dataframe to store the results:
+    col1 = []
+    for j in np.arange(0,order):
+        for k in np.arange(0,j+1):
+                name = 'x%s y%s'% (j-k,k)
+                col1.append(name)
+
+    # initialuse the name of rows and columns
+    ind = ['model_pow_%d'%i for i in np.arange(0,order)]
+    col = ['power','mse', 'r2','bias', 'variance', 'mse_train']
+    table_of_info = pd.DataFrame(index=ind, columns=col)
+    coef_matrix = pd.DataFrame(index=ind, columns=col1)
+    
+    #loop for creating fits for many orders
+    for i in np.arange(0,order): 
+        #create fit object
+        fit_object = Poly2DFit.Poly2DFit()
+        fit_object.givenData(x,y,z)   
+        if kfold != 0:
+            fit_object.kfold_cross(i, regressiontype, lam, kfold )
+        else:
+            #returns the fitted parameters and their variance
+            par, par_var = fit_object.run_fit( i, regressiontype, lam )
+
+            #evaluate model, return x,y points and model prediction
+            fit_object.evaluate_model()
+
+        #save informaton
+        table_of_info.iloc[i,0] = i
+        table_of_info.iloc[i,1] = fit_object.mse
+        table_of_info.iloc[i,2] = fit_object.r2
+        table_of_info.iloc[i,3] = fit_object.bias
+        table_of_info.iloc[i,4] = fit_object.variance
+        if kfold != 0:
+            table_of_info.iloc[i,5] = fit_object.mse_train
+
+        if plot_fit:
+            #plot the data and model
+            fit_object.plot_function()
+
+        if save_file:
+             #stores information about the fit in ./Test/OLS/first_OLS.txt
+             fit_object.store_information(regressiontype, 'order_%i' % i)
+
+        #find the number of parameters and then put these parameters in a table
+        num_of_p = int((i+1)*(i+2)/2)
+        for m in np.arange(0,num_of_p):
+            coef_matrix.iloc[i,m] = fit_object.par[m]
+        del fit_object
 
     if display_info:
         pd.options.display.float_format = '{:,.2g}'.format
@@ -273,7 +341,7 @@ def plotting(toi, folder = ''):
     #R2 filter
     r2_filter = toi['Metric'] =='R2'
     #book filter
-    book_filter = ((toi['Metric']=='MSE') | (toi['Metric']=='MSE_train')) &  ((toi['lambda'] == 0) | (toi['lambda'] == 0.001)) & (toi['kFold'] != 0)
+    book_filter = ((toi['Metric']=='MSE') | (toi['Metric']=='MSE_train')) &  ((toi['lambda'] == 0) | (toi['lambda'] == 0.0001)) & (toi['kFold'] != 0)
     
     #compare kfold for different regressions
     plotting_mse(toi[lam_filter], row ='Regression type', col='kFold', filename = folder +'reg_types')
