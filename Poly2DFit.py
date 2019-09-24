@@ -205,7 +205,7 @@ class Poly2DFit:
         -calcualtes the variance and bias of the modell
         returns the modelpoints
         """
-#        p = self.par.shape[0]
+        p = self.par.shape[0]
 
 
         if self.kfold:

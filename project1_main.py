@@ -34,11 +34,11 @@ def main():
             toi = toi_append(toi, temp, 'RIDGE', l, k)
 
 
-#            current_progress += one_part
-#            print("Now: LASSO; Progress", int(current_progress), "%")
-#
-#            temp = benchmarking('LASSO', samples, max_order+1, lam=l, kfold= k, plot_info= False, display_info = False)
-#            toi = toi_append(toi, temp, 'LASSO', l, k)
+            current_progress += one_part
+            print("Now: LASSO; Progress", int(current_progress), "%")
+
+            temp = benchmarking('LASSO', samples, max_order+1, lam=l, kfold= k, plot_info= False, display_info = False)
+            toi = toi_append(toi, temp, 'LASSO', l, k)
 
     # plot results of benchmarking
     plotting(toi, folder='')
