@@ -1,10 +1,10 @@
-from additional_functions_project1 import MSE, R2, FrankeFunction, plot_it
+from additional_functions_project1 import MSE, R2, FrankeFunction
+from plotting_functions import plot_it
 import numpy as np
 import subprocess
 import warnings
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import Lasso
-
 
 class Poly2DFit:
     """
@@ -35,21 +35,6 @@ class Poly2DFit:
         self.variance = 0
         self. bias = 0
 
-
-    def generateSample(self, n, mean = 0., var = 1):
-        """
-        This function creates a sample [x,y,z] where x,y are uniform random numbers [0,1)
-        and z = f(x,y) + eps with f the Franke function and eps normal distributed with mean and var
-
-        """
-
-        #use same random numbers each time to make evaulating easier
-        #create x and y randomly
-        self.x, self.y = np.random.rand(2,n)
-
-        #pass the x and y data into the Franke function this will be used later in evaluating the model
-        self.data = FrankeFunction(self.x, self.y) + np.sqrt(var)*np.random.randn(n) + mean
-
     def givenData(self, x, y, f):
         """
         stores given 2D data in class
@@ -59,71 +44,32 @@ class Poly2DFit:
         self.y = y
         self.data = f
 
+    def matDesign (self, x , y , indVariables = 2):
+        '''This is a function to set up the design matrix
+        the inputs are :dataSet, the n datapoints, x and y data in a nx2 matrix
+                        order, is the order of the coefficients,
+                        indVariables, the number of independant variables
+        the outputs are X
+        '''
 
-    def kfold_cross(self, Pol_order, regtype, lam = 0.1, k= 1):
-        """
-        runs the k-Fold cross-validation on the given data
-        sets the training example afterwards to self.x, self.y, self.data
-        sets kfold flag to True
-        """
-        self.k = k
-        self.kfold = True
-        #make sure all is set to 0
-        self.mse = 0
-        self.mse_train = 0
-        self.r2 = 0
-        self.variance = 0
-        self. bias = 0
+        # find the number of coefficients we will end up with
+        num_coeff = int((self.order + 1)*(self.order + 2)/2)
 
-        np.random.seed(0)
-        np.random.shuffle(self.x)
-        np.random.seed(0)
-        np.random.shuffle(self.y)
-        np.random.seed(0)
-        np.random.shuffle(self.data)
+        #find the number of rows in dataSet
+        n = np.shape(x)[0]
+        # create an empty matrix of zeros
+        self._design = np.zeros((n,num_coeff))
 
-        x_folds = np.array(np.array_split(self.x, k+1))
-        y_folds = np.array(np.array_split(self.y, k+1))
-        data_folds = np.array(np.array_split(self.data, k+1))
-   
-        for i in range(k + 1):
+        #fast assignment
+        temp = self._design.T
+        current_col = 0
 
-            self.xtrain = np.concatenate(np.delete(x_folds, i , 0))
-            self.xtest  = x_folds[i]
-            self.ytrain = np.concatenate(np.delete(y_folds, i , 0))
-            self.ytest  = y_folds[i]
-            self.datatrain = np.concatenate(np.delete(data_folds, i , 0))
-            self.datatest  = data_folds[i]
+        for p in range(self.order + 1):
+            for i in range(p + 1):
+                temp[current_col] = x**(p-i) * y**(i)
+                current_col += 1
 
-            Poly2DFit.run_fit(self, Pol_order, regtype, lam)
-            self.mse_train += Poly2DFit.evaluate_model(self, self.k)
-
-
-    def run_fit(self, Pol_order, regtype, lam = 0.1):
-        """
-        perfomes the fit of the data to the model given as design matrix
-        suportet regtypes are 'OLS', 'RIDGE'
-        lam is ignored for OLS
-        returns fit parameters and their variance
-        """
-        self.order = Pol_order
-        self.lam = lam
-        self.regType = regtype
-        self.model = np.zeros(self.data.shape)
-
-        if self.kfold:
-            Poly2DFit.matDesign(self, self.xtrain, self.ytrain)
-        else:
-            Poly2DFit.matDesign(self, self.x, self.y)
-
-        if regtype == 'OLS':
-            Poly2DFit._linReg(self)
-        if regtype == 'RIDGE':
-            Poly2DFit._ridgeReg(self)
-        if regtype == 'LASSO':
-            Poly2DFit._lasso(self)
-
-        return self.par, self.par_var
+        self._design = temp.T
 
     def _linReg(self):
         """
@@ -188,35 +134,69 @@ class Poly2DFit:
             self.par = clf.coef_
         self.par_var = 0
 
-    def matDesign (self, x , y , indVariables = 2):
-        '''This is a function to set up the design matrix
-        the inputs are :dataSet, the n datapoints, x and y data in a nx2 matrix
-                        order, is the order of the coefficients,
-                        indVariables, the number of independant variables
-        the outputs are X
-        '''
+    def run_fit(self, Pol_order, regtype, lam = 0.1):
+        """
+        perfomes the fit of the data to the model given as design matrix
+        suportet regtypes are 'OLS', 'RIDGE'
+        lam is ignored for OLS
+        returns fit parameters and their variance
+        """
+        self.order = Pol_order
+        self.lam = lam
+        self.regType = regtype
+        self.model = np.zeros(self.data.shape)
 
-        # find the number of coefficients we will end up with
-        num_coeff = int((self.order + 1)*(self.order + 2)/2)
+        if self.kfold:
+            Poly2DFit.matDesign(self, self.xtrain, self.ytrain)
+        else:
+            Poly2DFit.matDesign(self, self.x, self.y)
 
-        #find the number of rows in dataSet
-        n = np.shape(x)[0]
-        # create an empty matrix of zeros
-        self._design = np.zeros((n,num_coeff))
+        if regtype == 'OLS':
+            Poly2DFit._linReg(self)
+        if regtype == 'RIDGE':
+            Poly2DFit._ridgeReg(self)
+        if regtype == 'LASSO':
+            Poly2DFit._lasso(self)
 
-        #fast assignment
-        temp = self._design.T
-        current_col = 0
+        return self.par, self.par_var
 
-        for p in range(self.order + 1):
-            for i in range(p + 1):
-                temp[current_col] = x**(p-i) * y**(i)
-                current_col += 1
+    def kfold_cross(self, Pol_order, regtype, lam = 0.1, k= 1):
+        """
+        runs the k-Fold cross-validation on the given data
+        sets the training example afterwards to self.x, self.y, self.data
+        sets kfold flag to True
+        """
+        self.k = k
+        self.kfold = True
+        #make sure all is set to 0
+        self.mse = 0
+        self.mse_train = 0
+        self.r2 = 0
+        self.variance = 0
+        self. bias = 0
 
-        self._design = temp.T
+        np.random.seed(0)
+        np.random.shuffle(self.x)
+        np.random.seed(0)
+        np.random.shuffle(self.y)
+        np.random.seed(0)
+        np.random.shuffle(self.data)
 
+        x_folds = np.array(np.array_split(self.x, k+1))
+        y_folds = np.array(np.array_split(self.y, k+1))
+        data_folds = np.array(np.array_split(self.data, k+1))
+   
+        for i in range(k + 1):
 
+            self.xtrain = np.concatenate(np.delete(x_folds, i , 0))
+            self.xtest  = x_folds[i]
+            self.ytrain = np.concatenate(np.delete(y_folds, i , 0))
+            self.ytest  = y_folds[i]
+            self.datatrain = np.concatenate(np.delete(data_folds, i , 0))
+            self.datatest  = data_folds[i]
 
+            Poly2DFit.run_fit(self, Pol_order, regtype, lam)
+            self.mse_train += Poly2DFit.evaluate_model(self, self.k)
 
     def evaluate_model(self, k = 1):
 
@@ -268,7 +248,18 @@ class Poly2DFit:
             self.variance = MSE(self.model, expect_model)
             self.bias = self.mse - self.variance - np.var([self.x, self.y])
 
+    def generateSample(self, n, mean = 0., var = 1):
+        """
+        This function creates a sample [x,y,z] where x,y are uniform random numbers [0,1)
+        and z = f(x,y) + eps with f the Franke function and eps normal distributed with mean and var
+        This function is used for bench marking
+        """
+        #use same random numbers each time to make evaulating easier
+        #create x and y randomly
+        self.x, self.y = np.random.rand(2,n)
 
+        #pass the x and y data into the Franke function this will be used later in evaluating the model
+        self.data = FrankeFunction(self.x, self.y) + np.sqrt(var)*np.random.randn(n) + mean
 
     def plot_function(self):
         """
@@ -280,7 +271,9 @@ class Poly2DFit:
 
 
     def store_information(self, filepath, filename):
-
+        """
+        stores information about parameters and score functions
+        """
         try:
             f = open(filepath + "/" + filename  + ".txt",'w+')
         except:

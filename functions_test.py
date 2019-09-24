@@ -2,7 +2,7 @@ import Poly2DFit
 import numpy as np 
 import pytest
 from sklearn. metrics import r2_score, mean_squared_error
-from sklearn.linear_model import Ridge, LinearRegression, RidgeCV, LassoCV
+from sklearn.linear_model import Ridge, LinearRegression
 from additional_functions_project1 import R2, MSE
 """
 run pytest command from comandline 
