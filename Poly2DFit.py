@@ -185,7 +185,7 @@ class Poly2DFit:
         x_folds = np.array(np.array_split(self.x, k+1))
         y_folds = np.array(np.array_split(self.y, k+1))
         data_folds = np.array(np.array_split(self.data, k+1))
-   
+
         for i in range(k + 1):
 
             self.xtrain = np.concatenate(np.delete(x_folds, i , 0))
