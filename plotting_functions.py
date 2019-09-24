@@ -3,10 +3,10 @@ functions for plotting the table of informations toi
 and other plotting functions
 """
 import seaborn as sns
-import numpy as np 
+import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-import pandas as pd 
+import pandas as pd
 
 def duplicate_axis(ax):
     l = ax.lines[0]

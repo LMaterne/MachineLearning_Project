@@ -10,9 +10,9 @@ def main():
 
     ks = [0, 1, 5, 10]
     lam = [10**(-5), 10**(-3), 10**(-1)]
-    
-    max_order = 3
-    samples = 5*10**2
+
+    max_order = 6
+    samples = 5*10**3
 
     toi = pd.DataFrame(columns = ['Regression type','lambda','kFold',
                                         'Complexity','Value', 'Metric'] )
@@ -26,7 +26,7 @@ def main():
         print("Now: OLS; Progress", int(current_progress), "%")
         temp = benchmarking('OLS', samples, max_order+1, kfold=k, plot_info= False, display_info = False)
         toi = toi_append(toi, temp, 'OLS', 0, k)
-        
+
         for l in lam:
             current_progress += one_part
             print("Now: RIDGE; Progress", int(current_progress), "%")
@@ -34,14 +34,15 @@ def main():
             toi = toi_append(toi, temp, 'RIDGE', l, k)
 
 
-            current_progress += one_part
-            print("Now: LASSO; Progress", int(current_progress), "%")
-            
-            temp = benchmarking('LASSO', samples, max_order+1, lam=l, kfold= k, plot_info= False, display_info = False)
-            toi = toi_append(toi, temp, 'LASSO', l, k)     
-    # plot results of benchmarking       
+#            current_progress += one_part
+#            print("Now: LASSO; Progress", int(current_progress), "%")
+#
+#            temp = benchmarking('LASSO', samples, max_order+1, lam=l, kfold= k, plot_info= False, display_info = False)
+#            toi = toi_append(toi, temp, 'LASSO', l, k)
+
+    # plot results of benchmarking
     plotting(toi, folder='')
-    
+
 
 if __name__ == "__main__":
     start = time.perf_counter()

@@ -37,7 +37,12 @@ def R2(data, model):
     return 1 - numerator/denominator
 
 def load_terrain(imname, sel = 4): #select every fourth
-# Load the terrain
+"""
+This function loads the terrain data. The data
+is then reduced by selection every sel (eg. every 4th. element).
+It then flattens the reduced matrix and returns z(x,y) - height,
+and x,y pixel index.
+"""
     terrain = imread('{:}.tif'.format(imname))
 # Show the terrain
     plt.figure()
@@ -48,7 +53,7 @@ def load_terrain(imname, sel = 4): #select every fourth
     plt.show()
 # return the terrain data,
 # which is a matrix with values corresponding to f(x,y) - height
-#reducing terrain data   
+#reducing terrain data
     N = len(terrain[0,::sel]) # length reduced columns
     n = len(terrain[::sel,0]) # length reduced rows
     NN = len(terrain[0,:]) # number of columns total
@@ -61,7 +66,20 @@ def load_terrain(imname, sel = 4): #select every fourth
     reduced2 = np.zeros((n,N))
     for j in range(N):
         reduced2[:,j] = reduced[::sel,j]
-    return reduced2
+
+# flattening and returning
+    z = reduced2.flatten()
+
+    # creating arrays for x and y
+    x_range = np.arange(1,n+1)
+    y_range = np.arange(1,N+1)
+
+    X,Y = np.meshgrid(x_range,y_range)
+    x = X.flatten()
+    y = Y.flatten()
+
+    return x,y,z
+
 
 def toi_append(data, info, regressiontype, lam, kFold):
     n = len(info['power'].to_numpy())
