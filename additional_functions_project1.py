@@ -39,7 +39,7 @@ def R2(data, model):
 def load_terrain(imname, sel = 4): #select every fourth
 """
 This function loads the terrain data. The data
-is then reduced by selection every sel (eg. every 4th. element).
+is then reduced by selecting every sel (eg. every 4th. element).
 It then flattens the reduced matrix and returns z(x,y) - height,
 and x,y pixel index.
 """
@@ -51,8 +51,7 @@ and x,y pixel index.
     plt.xlabel('X')
     plt.ylabel('Y')
     plt.show()
-# return the terrain data,
-# which is a matrix with values corresponding to f(x,y) - height
+
 #reducing terrain data
     N = len(terrain[0,::sel]) # length reduced columns
     n = len(terrain[::sel,0]) # length reduced rows
@@ -66,18 +65,13 @@ and x,y pixel index.
     reduced2 = np.zeros((n,N))
     for j in range(N):
         reduced2[:,j] = reduced[::sel,j]
-
-# flattening and returning
+#flattening
     z = reduced2.flatten()
-
     # creating arrays for x and y
     x_range = np.arange(1,n+1)
     y_range = np.arange(1,N+1)
-
     X,Y = np.meshgrid(x_range,y_range)
-    x = X.flatten()
-    y = Y.flatten()
-
+    x = X.flatten();y = Y.flatten()
     return x,y,z
 
 
