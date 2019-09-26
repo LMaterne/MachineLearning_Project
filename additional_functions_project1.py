@@ -37,12 +37,12 @@ def R2(data, model):
     return 1 - numerator/denominator
 
 def load_terrain(imname, sel = 4): #select every fourth
-"""
-This function loads the terrain data. The data
-is then reduced by selecting every sel (eg. every 4th. element).
-It then flattens the reduced matrix and returns z(x,y) - height,
-and x,y pixel index.
-"""
+    """
+    This function loads the terrain data. The data
+    is then reduced by selecting every sel (eg. every 4th. element).
+    It then flattens the reduced matrix and returns z(x,y) - height,
+    and x,y pixel index.
+    """
     terrain = imread('{:}.tif'.format(imname))
 # Show the terrain
     plt.figure()
@@ -117,10 +117,10 @@ def benchmarking( regressiontype, n = 500, order = 7, lam = 0.1, kfold = 0,
 
         #generate data with noise: mean 0, var =1
         fit_object.generateSample(n)
-"""
+
         # alternatively work with terrain data
-        fit_object.givenData(x,y,z)
-"""
+#        fit_object.givenData(x,y,z)
+
         if kfold != 0:
             fit_object.kfold_cross(i, regressiontype, lam, kfold )
         else:
