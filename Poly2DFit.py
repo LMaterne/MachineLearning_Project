@@ -166,7 +166,7 @@ class Poly2DFit:
         sets the training example afterwards to self.x, self.y, self.data
         sets kfold flag to True
         """
-        self.k = k
+        self.k = k + 1
         self.kfold = True
         #make sure all is set to 0
         self.mse = 0

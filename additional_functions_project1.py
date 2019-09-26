@@ -37,35 +37,36 @@ def R2(data, model):
     return 1 - numerator/denominator
 
 def load_terrain(imname, sel = 4): #select every fourth
-"""
-This function loads the terrain data. The data
-is then reduced by selecting every sel (eg. every 4th. element).
-It then flattens the reduced matrix and returns z(x,y) - height,
-and x,y pixel index.
-"""
+    """
+    This function loads the terrain data. The data
+    is then reduced by selecting every sel (eg. every 4th. element).
+    It then flattens the reduced matrix and returns z(x,y) - height,
+    and x,y pixel index.
+    """
     terrain = imread('{:}.tif'.format(imname))
-# Show the terrain
+    # Show the terrain
+    """
     plt.figure()
     plt.title(imname)
     plt.imshow(terrain, cmap='gray')
     plt.xlabel('X')
     plt.ylabel('Y')
     plt.show()
-
-#reducing terrain data
+    """
+    #reducing terrain data
     N = len(terrain[0,::sel]) # length reduced columns
     n = len(terrain[::sel,0]) # length reduced rows
     NN = len(terrain[0,:]) # number of columns total
     nn = len(terrain[:,0]) # number of rows total
-#reducing by column
+    #reducing by column
     reduced  = np.zeros((nn,N))
     for i in range(nn):
             reduced[i,:] = terrain[i,::sel]
-#reduce by rows
+    #reduce by rows
     reduced2 = np.zeros((n,N))
     for j in range(N):
         reduced2[:,j] = reduced[::sel,j]
-#flattening
+    #flattening
     z = reduced2.flatten()
     # creating arrays for x and y
     x_range = np.arange(1,n+1)
@@ -162,3 +163,4 @@ def benchmarking( regressiontype, n = 500, order = 7, lam = 0.1, kfold = 0,
         plot_stats(table_of_info,title )
 
     return table_of_info
+
