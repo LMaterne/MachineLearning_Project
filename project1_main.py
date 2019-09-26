@@ -20,7 +20,11 @@ def main():
     ops = len(ks) * ( 2 * len(lam) + 1)
     one_part = 100 / ops #in%
     current_progress = 0
-
+"""
+    # load terrain data, for example yellowstone
+    x,y,z = load_terrain('yellowstone')
+Give x, y,z as variables to benchmarking when working with terrain data.
+"""
     for k in ks:
         current_progress += one_part
         print("Now: OLS; Progress", int(current_progress), "%")

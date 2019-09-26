@@ -93,8 +93,9 @@ def toi_append(data, info, regressiontype, lam, kFold):
 
     return  data.append(app)
 
+
 def benchmarking( regressiontype, n = 500, order = 7, lam = 0.1, kfold = 0,
-                 display_info = True, plot_info = True, plot_fit =False, save_file = False):
+                 display_info = True, plot_info = True, plot_fit =False, save_file = False, x = 0, y = 0, z = 0):
 
     #Initialize a dataframe to store the results:
     col1 = []
@@ -116,7 +117,10 @@ def benchmarking( regressiontype, n = 500, order = 7, lam = 0.1, kfold = 0,
 
         #generate data with noise: mean 0, var =1
         fit_object.generateSample(n)
-
+"""
+        # alternatively work with terrain data
+        fit_object.givenData(x,y,z)
+"""
         if kfold != 0:
             fit_object.kfold_cross(i, regressiontype, lam, kfold )
         else:
