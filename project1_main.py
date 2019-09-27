@@ -24,7 +24,7 @@ def main():
     lam = [10**(-5), 10**(-3), 10**(-1)]
 
     max_order = 10
-    """
+    
     samples = 5*10**3
 
     toi = pd.DataFrame(columns = ['Regression type','lambda','kFold',
@@ -59,7 +59,7 @@ def main():
 
     # plot results of benchmarking
     plotting(toi, folder='')
-    """
+    
     reductions = [36, 6, 4]
     for reduction in reductions:
         
@@ -119,7 +119,7 @@ def main():
         toi['Complexity'] = toi['Complexity'].astype(float)
         toi['lambda'] = toi['lambda'].astype(float)
         plotting(toi, folder='./yellowstone1_%i_scale/'% reduction)
-        """
+        
         SMALL_SIZE = 22
         MEDIUM_SIZE = 24
         BIGGER_SIZE = 28
@@ -170,7 +170,7 @@ def main():
                 plt.ylabel('Y')
         plt.tight_layout()
         plt.savefig('./yellowstone1_%i_scale/fit.pdf'%reduction)
-    """
+    
 
 if __name__ == "__main__":
     start = time.perf_counter()

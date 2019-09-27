@@ -106,11 +106,11 @@ def plotting(toi, folder = ''):
     book_filter = ((toi['Metric']=='MSE') | (toi['Metric']=='MSE_train')) &  ((toi['lambda'] == 0) | (toi['lambda'] == 0.001)) & (toi['kFold'] != 0)
 
     #compare kfold for different regressions
-    #plotting_mse(toi[lam_filter], row ='Regression type', col='kFold', filename = folder +'reg_types')
+    plotting_mse(toi[lam_filter], row ='Regression type', col='kFold', filename = folder +'reg_types')
     #compare kfold and lambda for lasso
-    #plotting_mse(toi[lasso_filter], row ='lambda', col='kFold', filename = folder +'lasso_lam_vs_kfold')
+    plotting_mse(toi[lasso_filter], row ='lambda', col='kFold', filename = folder +'lasso_lam_vs_kfold')
     #compare kfold and lambda fore ridge
-    #plotting_mse(toi[ridge_filter], row ='lambda', col='kFold', filename = folder + 'ridge_lam_vs_kfold')
+    plotting_mse(toi[ridge_filter], row ='lambda', col='kFold', filename = folder + 'ridge_lam_vs_kfold')
     #make r2 plot and split (no shared y)
     plotting_r2(toi[r2_filter], filename = folder +'r2')
     #make plot from book

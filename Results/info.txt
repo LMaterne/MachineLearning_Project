@@ -1,0 +1,2 @@
+All plots are made with k-fold cross validation of k =5 unless otherwise specifyed
+for lambda plots: lam = E-4, order = 4, #datapoints in file name
