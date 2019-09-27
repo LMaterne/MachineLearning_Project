@@ -86,7 +86,7 @@ class Poly2DFit:
             #warnings.warn("Singular Matrix: Using SVD", Warning)
             U, S, VT = np.linalg.svd(XTX)
             sinv = np.zeros(S.shape)
-            sinv[np.abs(S) > 10e-8 ] =  1./S[np.abs(S) > 10e-8 ]
+            sinv[np.abs(S) > 10e-12 ] =  1./S[np.abs(S) > 10e-12 ]
             inverse = (VT.T*sinv).dot(U.T)
 
         self.par_var = np.diag(inverse)
@@ -230,7 +230,7 @@ class Poly2DFit:
             #alternative implementaton
             # MSE = bias + variance + data_var <-> bias = MSE - varinace - data_var
             #what is data var?
-            self.bias += (mse_temp - var_temp - np.var([self.x, self.y]))/self.k
+            self.bias += (mse_temp - var_temp - np.var(self.datatrain))/self.k
 
             #returning the  weighted MSE on training data
             return MSE_train/self.k
@@ -247,7 +247,7 @@ class Poly2DFit:
 
             #self.bias = MSE(FrankeFunction(self.x, self.y), expect_model) # explain this in text why we use FrankeFunction
             self.variance = MSE(self.model, expect_model)
-            self.bias = self.mse - self.variance - np.var([self.x, self.y])
+            self.bias = self.mse - self.variance - np.var(self.data)
 
     def generateSample(self, n, mean = 0., var = 1):
         """

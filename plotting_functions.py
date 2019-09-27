@@ -40,7 +40,7 @@ def plotting_mse(toi, row, col, filename, split = False, ylabel ='MSE', shary = 
     g.map(plt.plot, 'Complexity', 'Value')
     g.add_legend()
     g.set_axis_labels('Polynom Order', ylabel)
-    g.set(xticks = np.arange(0, max_order +1, 2))
+    g.set(xticks =np.linspace(0,max_order,5,dtype=int))
     g.savefig(filename + '.pdf')
 
     if split:
@@ -66,11 +66,11 @@ def plotting_mse(toi, row, col, filename, split = False, ylabel ='MSE', shary = 
 
 def plotting_r2(toi, filename):
     max_order = int(toi['Complexity'].max())
-    g = sns. FacetGrid(toi, row ='lambda', col='kFold', hue ='Regression type', margin_titles =True)
+    g = sns. FacetGrid(toi, col ='lambda', row='kFold', hue ='Regression type', margin_titles =True)
     g.map(plt.plot, 'Complexity', 'Value')
     g.set_axis_labels('Polynom Order', 'R2')
     g.add_legend()
-    g.set(xticks = np.arange(0, max_order + 1, 2))
+    g.set(xticks = np.linspace(0,max_order,5,dtype=int))
     g.savefig(filename +'.pdf')
     labels = toi['Metric'].unique()
     axes = g.axes.flat
@@ -95,7 +95,7 @@ def plotting_r2(toi, filename):
 
 def plotting(toi, folder = ''):
      #filter for lam
-    lam_filter =  ((toi['lambda'] == 0) | (toi['lambda'] == 0.001)) & ((toi['Metric'] != 'R2') & (toi['Metric'] != 'MSE_train'))
+    lam_filter =  ((toi['lambda'] == 0) | (toi['lambda'] == 0.00001) | (toi['lambda'] == 0.001)) & ((toi['Metric'] != 'R2') & (toi['Metric'] != 'MSE_train'))
     #filter for Ridge
     ridge_filter = (toi['Regression type'] == 'RIDGE') & ((toi['Metric'] != 'R2') & (toi['Metric'] != 'MSE_train'))
     #filter for lasso
@@ -103,19 +103,19 @@ def plotting(toi, folder = ''):
     #R2 filter
     r2_filter = toi['Metric'] =='R2'
     #book filter
-    book_filter = ((toi['Metric']=='MSE') | (toi['Metric']=='MSE_train')) &  ((toi['lambda'] == 0) | (toi['lambda'] == 0.001)) & (toi['kFold'] != 0)
+    book_filter = ((toi['Metric']=='MSE') | (toi['Metric']=='MSE_train')) &  ((toi['lambda'] == 0) | (toi['lambda'] == 0.00001)) & (toi['kFold'] != 0)
 
     #compare kfold for different regressions
-    plotting_mse(toi[lam_filter], row ='Regression type', col='kFold', filename = folder +'reg_types')
+    plotting_mse(toi[lam_filter], col ='Regression type', row='kFold', filename = folder +'reg_types')
     #compare kfold and lambda for lasso
-    plotting_mse(toi[lasso_filter], row ='lambda', col='kFold', filename = folder +'lasso_lam_vs_kfold')
+    plotting_mse(toi[lasso_filter], col ='lambda', row='kFold', filename = folder +'lasso_lam_vs_kfold')
     #compare kfold and lambda fore ridge
-    plotting_mse(toi[ridge_filter], row ='lambda', col='kFold', filename = folder + 'ridge_lam_vs_kfold')
+    plotting_mse(toi[ridge_filter], col ='lambda', row='kFold', filename = folder + 'ridge_lam_vs_kfold')
     #make r2 plot and split (no shared y)
     plotting_r2(toi[r2_filter], filename = folder +'r2')
     #make plot from book
-    plotting_mse(toi[book_filter], row ='Regression type', col='kFold', filename=folder +'train_vs_test', split = True, shary=True)
-    plotting_mse(toi[book_filter], row ='Regression type', col='kFold', filename=folder +'train_vs_test_no_share', split = True, shary=False)
+    plotting_mse(toi[book_filter], col='Regression type', row='kFold', filename=folder +'train_vs_test', split = True, shary=True)
+    plotting_mse(toi[book_filter], col ='Regression type', row='kFold', filename=folder +'train_vs_test_no_share', split = True, shary=False)
     
 
 def plot_stats(info, title = 'Regression Infos'):

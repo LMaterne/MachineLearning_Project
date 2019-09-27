@@ -19,13 +19,13 @@ def normalize(x,y,z, rescale = True):
     return x,y,z
 
 def main():
-
+    
     ks = [0, 5, 10]
     lam = [10**(-5), 10**(-3), 10**(-1)]
 
-    max_order = 10
+    max_order = 20
     
-    samples = 5*10**3
+    samples = 5*10**2
 
     toi = pd.DataFrame(columns = ['Regression type','lambda','kFold',
                                         'Complexity','Value', 'Metric'] )
@@ -58,10 +58,14 @@ def main():
             toi = toi_append(toi, temp, 'LASSO', l, k)
 
     # plot results of benchmarking
+    toi.to_csv('./Results/benchmarking.csv')
     plotting(toi, folder='')
     
-    reductions = [36, 6, 4]
-    for reduction in reductions:
+    reductions = [6, 36]
+    ks = [5]
+    lam = [10**(-6), 10**(-5), 10**(-4), 10**(-3)]
+    max_order = [ np.linspace(1,25,10,  dtype =int), np.arange(10,111,10), range(1,11)] 
+    for reds, reduction in enumerate(reductions):
         
         x,y,z = load_terrain('./Terraindata/yellowstone1', reduction)
         x,y,z = normalize(x,y,z)
@@ -71,12 +75,12 @@ def main():
         toi = pd.DataFrame(columns = ['Regression type','lambda','kFold',
                                             'Complexity','Value', 'Metric'])
 
-        ops = len(ks) * ( 2 * len(lam) + 1)*(max_order +1)
+        ops = len(ks) * ( 2 * len(lam) + 1)*len(max_order[reds])
         one_part = 100 / ops #in%
         current_progress = 0
         
         for k in ks:
-            for p in range(max_order + 1):
+            for p in max_order[reds]:
                 current_progress += one_part
                 print("Now: OLS; Progress", int(current_progress), "%")
                 try:
@@ -118,59 +122,65 @@ def main():
         toi['Value'] = toi['Value'].astype(float)
         toi['Complexity'] = toi['Complexity'].astype(float)
         toi['lambda'] = toi['lambda'].astype(float)
+        toi.to_csv('./yellowstone1_%i_scale/benchmarking.csv' % reduction)
         plotting(toi, folder='./yellowstone1_%i_scale/'% reduction)
-        
-        SMALL_SIZE = 22
-        MEDIUM_SIZE = 24
-        BIGGER_SIZE = 28
+    
+    SMALL_SIZE = 22
+    MEDIUM_SIZE = 24
+    BIGGER_SIZE = 28
 
-        plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
-        plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
-        plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
-        plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
-        plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
-        plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
-        plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
-        
-        plt.figure(figsize=(10,10))
-        terrain = imread('./Terraindata/yellowstone1.tif')
-        c1 = plt.imshow(terrain, cmap='gray')
-        plt.colorbar(c1,label='Z')
-        plt.xlabel('X')
-        plt.ylabel('Y')
-        plt.savefig('./yellowstone1_%i_scale/raw.pdf'% reduction)
-        
+    plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
+    plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
+    plt.rc('axes', labelsize=0)    # fontsize of the x and y labels
+    plt.rc('xtick', labelsize=0)    # fontsize of the tick labels
+    plt.rc('ytick', labelsize=0)    # fontsize of the tick labels
+    plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
+    plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
+    
+    reductions = [6, 36]
+    for red in reductions:
+        toi = pd.read_csv('./yellowstone1_%i_scale/benchmarking.csv'% red)
+
+        x,y,z = load_terrain('./Terraindata/yellowstone1', red)
+        x,y,z = normalize(x,y,z)
         fit_best = Poly2DFit.Poly2DFit()
         fit_best.givenData(x,y,z)
-        best_order = [10,10,10]
-        best_lam = [1, 0.1, 0.1]
-        zl = terrain[::reduction,::reduction].shape[0] 
-        terrain = z.reshape(zl,zl)
+
+        plt.figure(figsize=(10,10))
+        terrain = imread('./Terraindata/yellowstone1.tif')
+        c1 = plt.imshow(terrain, cmap='gist_earth')
+        plt.colorbar(c1,label='Z')
+        plt.savefig('./yellowstone1_%i_scale/raw.pdf'% red)    
+        
+        zl = terrain[::red,::red].shape
+        terrain = z.reshape(zl)
         tmin, tmax = terrain.min(), terrain.max()
+    
         plt.figure(figsize=(10,10))
         plt.subplot(221)
         plt.title('Processed Data')
-        c = plt.imshow(terrain, cmap='gray', vmin=0.9*tmin, vmax=1.1*tmax)
-        plt.colorbar(c)
-        #plt.xlabel('X')
-        plt.ylabel('Y')
-        for i, ty in enumerate(['OLS', 'RIDGE', 'LASSO']):
-            fit_best.run_fit(best_order[i], ty, best_lam[i])
-            z = fit_best._design.dot(fit_best.par)
-            terrain_fit = z.reshape(zl,zl)
+        c = plt.imshow(terrain, cmap='gist_earth', vmin=0.9*tmin, vmax=1.1*tmax)
+
+        for i,reg in enumerate(['OLS', 'RIDGE', 'LASSO']):
+            temp = toi[ (toi['Regression type']==reg) & (toi['Metric'] =='MSE')]
+            min_row = toi.loc[temp['Value'].idxmin()]
+            p = min_row['Complexity']
+            lam = min_row['lambda']   
+            
+            p -= 5
+            
+            fit_best.run_fit(int(p), reg, lam)
+            fit_best.evaluate_model()
+            z = fit_best._design.dot(fit_best.par)             
+            terrain_fit = z.reshape(zl)
+
             plt.subplot(2,2, 2+i)
-            plt.title(ty)
-            c = plt.imshow(terrain_fit, cmap='gray', vmin=0.9*tmin, vmax=1.1*tmax)
-            if i == 2 | i==0:
-                plt.colorbar(c, label = 'Z')
-            plt.colorbar(c)
-            if i >= 1:
-                plt.xlabel('X')
-            if i == 1:
-                plt.ylabel('Y')
+            plt.title(reg + ' | MSE = %.2E\n p = %i; $\lambda$ = %.1E' %(fit_best.mse, p, lam))
+            c = plt.imshow(terrain_fit, cmap='gist_earth', vmin=0.9*tmin, vmax=1.1*tmax)
+          
         plt.tight_layout()
-        plt.savefig('./yellowstone1_%i_scale/fit.pdf'%reduction)
-    
+        plt.savefig('./yellowstone1_%i_scale/fit.pdf'%red)
+
 
 if __name__ == "__main__":
     start = time.perf_counter()
