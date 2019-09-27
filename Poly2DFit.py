@@ -135,12 +135,12 @@ class Poly2DFit:
         #try to use standard inversion, otherwise use SVD
         try:
             inverse = np.linalg.inv(XTX)
-        
+            bla
         except:
-            warnings.warn("Singular Matrix: Using SVD", Warning)
+            #warnings.warn("Singular Matrix: Using SVD", Warning)
             U, S, VT = np.linalg.svd(XTX)
             sinv = np.zeros(S.shape)
-            sinv[np.abs(S) > 10e-20 ] =  1./S[np.abs(S) > 10e-20 ]
+            sinv[np.abs(S) > 10e-10 ] =  1./S[np.abs(S) > 10e-10 ]
             inverse = (VT.T*sinv).dot(U.T)
         
         self.par_var = np.diag(inverse)
