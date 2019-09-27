@@ -8,7 +8,7 @@ import time
 SMALL_SIZE = 22
 MEDIUM_SIZE = 24
 BIGGER_SIZE = 28
-"""
+
 plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
 plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
 plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
@@ -16,31 +16,31 @@ plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
 plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
-"""
+
 def main():
 
     ###########################################################################################################################
     #######nr of datapoints ###################################################################################################
     ###########################################################################################################################
 
-    n = [10**i for i in range(1,6)]
+    n = [10**i for i in range(2,6)]
     reg_types = np.array(['OLS', 'RIDGE', 'LASSO'])
-    lam = 10**(-2)
+    lam = 10**(-4)
     order = 4
 
     times = np.zeros((3, len(n)))
     mse = np.zeros((3, len(n)))
-    """
+    
     fit = Poly2DFit.Poly2DFit()
     
     for i, reg in enumerate(reg_types):
         for j, samples in enumerate(n):
             fit.generateSample(samples)
             s = time.perf_counter()
-            fit.run_fit(order, reg, lam)
+            fit.kfold_cross(order, reg, lam, k=5)
             times[i,j] = time.perf_counter() - s
-            fit.evaluate_model()
-            mse[i,j] = fit.mse
+            #fit.evaluate_model()
+            mse[i,j] = fit.mse_train
     
 
     plt.figure(figsize=(10,10))
@@ -64,89 +64,77 @@ def main():
     plt.ylabel('MSE', fontsize = 28)
     plt.xticks(n)
     plt.savefig('mse.pdf')
-    """
-    n=25
+    
+    num=[25, 100, 400]
     betas = np.zeros((3,2,100))
-    fit = Poly2DFit.Poly2DFit()
-    fit.generateSample(n) 
-    #fit.kfold_cross(order, 'OLS',k=5)
-    fit.run_fit(order, 'OLS')
-    fit.evaluate_model()
-    par = fit.par
-    var = fit.par_var
-    par_up = np.linalg.norm(par +  	1.96*np.sqrt(var/n))
-    par_down = np.linalg.norm(par -  	1.96*np.sqrt(var/n))
-    betas[0,0] = par_down * np.ones(100)
-    betas[0,1] = par_up * np.ones(100)
-    #mse_ols_t = [fit.mse_train for i in range(20)]
-    mse_ols = [fit.mse for i in range(100)]
-    mse_lambda = np.zeros((2,2,100))
-    
-    lambdas = np.linspace(10**(-8), 1,100)
-    for i, reg in enumerate(reg_types[1:]):
-        for j, lam in enumerate(lambdas):  
-                     
-            #fit.kfold_cross(order, reg, lam, k=0)
-            fit.run_fit(order, reg, lam)
-            fit.evaluate_model()
-            par = fit.par
-            if(i == 0):
-                par_up = np.linalg.norm(par +  	1.96*np.sqrt(var/n))
-                par_down = np.linalg.norm(par -  	1.96*np.sqrt(var/n))
-                betas[i+1,0,j] = par_down 
-                betas[i+1,1,j] = par_up 
-            else:
-                betas[i+1,0,j] = np.linalg.norm(par) 
-            mse_lambda[i,0,j] = fit.mse
-            #mse_lambda[i,1,j] = fit.mse_train
-    
-    c = [ 'tab:blue', 'tab:orange', 'tab:green']
-    plt.figure(figsize=(10,10))
-    plt.fill_between(lambdas,betas[0,0], betas[0,1], label ='OLS', alpha = 0.5, color = c[2], edgecolor = c[2] )
-    plt.fill_between(lambdas,betas[1,0], betas[1,1], label ='RIDGE', alpha = 0.5, color = c[0], edgecolor = c[0])
-    plt.plot(lambdas, betas[2,0], label = 'LASSO', color = c[1])
-    plt.xscale('log')
-    #plt.yscale('log')
-    plt.ylim(top=350)
-    plt.legend(loc='best', fontsize = 28)
-    plt.xlabel('$\lambda$', fontsize = 28)
-    plt.ylabel(r'|$\hat{\beta}$|', fontsize = 28)
-    plt.savefig('lambda_par_%i_p4.pdf'%n)
-    """
-    plt.figure(figsize=(10,10))
-    plt.plot(lambdas, mse_ols,color = c[2], label = 'OLS Train')
-    #plt.plot(lambdas, mse_ols_t,color = c[2],linestyle ='dashed', label = 'OLS Test')
-    for i, reg in enumerate(reg_types[1:]):
-        plt.plot(lambdas, mse_lambda[i,0], color = c[i], label = reg + ' Train')
-        #plt.plot(lambdas, mse_lambda[i,0], color = c[i],linestyle ='dashed', label = reg + ' Test')
-    plt.xscale('log')
-    plt.legend(loc='best', fontsize = 28)
-    plt.xlabel('$\lambda$', fontsize = 28)
-    plt.ylabel('MSE', fontsize = 28)
-    plt.ylim(0.25,1.4)
-    plt.savefig('lambda_%i_p4.pdf'%n)
-    
-    plt.figure(figsize=(10,10))
-    #plt.plot(lambdas, mse_ols,color = c[2], label = 'OLS Train')
-    plt.plot(lambdas, mse_ols_t,color = c[2], label = 'OLS Test')
-    for i, reg in enumerate(reg_types[1:]):
-        #plt.plot(lambdas, mse_lambda[i,0], color = c[i], label = reg + ' Train')
-        plt.plot(lambdas, mse_lambda[i,0], color = c[i], label = reg + ' Test')
-    plt.xscale('log')
-    #plt.yscale('log')
-    plt.legend(loc='best', fontsize = 28)
-    plt.xlabel('$\lambda$', fontsize = 28)
-    plt.ylabel('MSE', fontsize = 28)
-    #plt.xticks(n)
-    plt.savefig('lambda_80_k5_p4_test.pdf')
+    for nu in num:
+        fit = Poly2DFit.Poly2DFit()
+        fit.generateSample(nu) 
+        fit.kfold_cross(order, 'OLS', k=5)
+        #fit.run_fit(order, 'OLS')
+        #fit.evaluate_model()
+        par = fit.par
+        var = fit.par_var
+        par_up = np.linalg.norm(par +  	1.96*np.sqrt(var/nu))
+        par_down = np.linalg.norm(par -  	1.96*np.sqrt(var/nu))
+        betas[0,0] = par_down * np.ones(100)
+        betas[0,1] = par_up * np.ones(100)
+        #mse_ols_t = [fit.mse_train for i in range(20)]
+        mse_ols = [fit.mse_train for i in range(100)]
+        mse_lambda = np.zeros((2,2,100))
+        
+        lambdas = np.linspace(10**(-10), 10**(-1),100)
+        for i, reg in enumerate(reg_types[1:]):
+            for j, lam in enumerate(lambdas):  
+                        
+                fit.kfold_cross(order, reg, lam, k=5)
+                #fit.run_fit(order, reg, lam)
+                #fit.evaluate_model()
+                par = fit.par
+                var = fit.par_var
+                if(i == 0):
+                    par_up = np.linalg.norm(par +  	1.96*np.sqrt(var/nu))
+                    par_down = np.linalg.norm(par -  	1.96*np.sqrt(var/nu))
+                    betas[i+1,0,j] = par_down 
+                    betas[i+1,1,j] = par_up 
+                else:
+                    betas[i+1,0,j] = np.linalg.norm(par) 
+                mse_lambda[i,0,j] = fit.mse_train
+                mse_lambda[i,1,j] = fit.mse_train
+        
+        c = [ 'tab:blue', 'tab:orange', 'tab:green']
+        plt.figure(figsize=(10,10))
+        plt.fill_between(lambdas,betas[0,0], betas[0,1], label ='OLS', alpha = 0.5, color = c[2], edgecolor = c[2] )
+        plt.fill_between(lambdas,betas[1,0], betas[1,1], label ='RIDGE', alpha = 0.5, color = c[0], edgecolor = c[0])
+        plt.plot(lambdas, betas[2,0], label = 'LASSO', color = c[1])
+        plt.xscale('log')
+        #plt.yscale('log')
+        plt.ylim(top=350)
+        plt.legend(loc='best', fontsize = 28)
+        plt.xlabel('$\lambda$', fontsize = 28)
+        plt.ylabel(r'|$\hat{\beta}$|', fontsize = 28)
+        plt.savefig('lambda_par_%i_p4.pdf'%nu)
+        
+        plt.figure(figsize=(10,10))
+        plt.plot(lambdas, mse_ols,color = c[2], label = 'OLS')
+        #plt.plot(lambdas, mse_ols_t,color = c[2],linestyle ='dashed', label = 'OLS Test')
+        for i, reg in enumerate(reg_types[1:]):
+            plt.plot(lambdas, mse_lambda[i,0], color = c[i], label = reg)
+            #plt.plot(lambdas, mse_lambda[i,0], color = c[i],linestyle ='dashed', label = reg + ' Test')
+        plt.xscale('log')
+        plt.legend(loc='best', fontsize = 28)
+        plt.xlabel('$\lambda$', fontsize = 28)
+        plt.ylabel('MSE', fontsize = 28)
+        plt.ylim(0.25,1.4)
+        plt.savefig('lambda_%i_p4.pdf'%nu)
     
     order = [6,9,12,15]
     mse_ord = np.zeros((len(order),len(n)))
     for i, p in enumerate(order):
         for j, samples in enumerate(n):
             fit.generateSample(samples)
-            fit.run_fit(p, 'OLS', lam)
-            fit.evaluate_model()
+            fit.kfold_cross(p, 'OLS', lam, k=5)
+            #fit.evaluate_model()
             mse_ord[i,j] = fit.mse
 
     plt.figure(figsize=(10,10))
@@ -164,8 +152,8 @@ def main():
     for i, p in enumerate(order):
         for j, samples in enumerate(n):
             fit.generateSample(samples)
-            fit.run_fit(p, 'RIDGE', lam)
-            fit.evaluate_model()
+            fit.kfold_cross(p, 'RIDGE', lam, k=5)
+            #fit.evaluate_model()
             mse_ord[i,j] = fit.mse
 
     plt.figure(figsize=(10,10))
@@ -180,7 +168,7 @@ def main():
     plt.xticks(n)
     plt.savefig('mse_pol_ridge.pdf')
     
-    
+"""
     ###########################################################################################################################
     #######Benchmarking #######################################################################################################
     ###########################################################################################################################
@@ -357,9 +345,6 @@ def main():
     plt.ylabel('Y')
     plt.savefig('./Terrain_yellowstone2_low/yellowstone2_OLS.pdf')
 """
-
-
-
 
 
 if __name__ == "__main__":
