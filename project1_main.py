@@ -21,16 +21,16 @@ def normalize(x,y,z, rescale = True):
 def main():
     
     ks = [5]
-    lam = [10**(-5), 10**(-3), 10**(-1)]
+    lam = [ 10**(-3), 10**(-1)]
 
-    max_order = 5
+    max_order = 3
     
     samples = 5*10**2
 
     toi = pd.DataFrame(columns = ['Regression type','lambda','kFold',
                                         'Complexity','Value', 'Metric'] )
     
-    tob = pd.DataFrame(columns = [])
+    tob = pd.DataFrame()
     
     ops = len(ks) * ( 2 * len(lam) + 1)
     one_part = 100 / ops #in%
@@ -62,8 +62,9 @@ def main():
             
     # plot results of benchmarking
     toi.to_csv('./Results/benchmarking.csv')
+    tob.to_csv('./Results/beta.csv')
     plotting(toi, folder='')
-    '''
+    
     reductions = [6, 36]
     ks = [5]
     lam = [10**(-6), 10**(-5), 10**(-4), 10**(-3)]
@@ -183,8 +184,8 @@ def main():
           
         plt.tight_layout()
         plt.savefig('./yellowstone1_%i_scale/fit.pdf'%red)
-    '''
-
+    
+    
 if __name__ == "__main__":
     start = time.perf_counter()
     main()

@@ -98,22 +98,23 @@ def toi_append(data, info, regressiontype, lam, kFold):
 def benchmarking( regressiontype, n = 500, order = 7, lam = 0.1, kfold = 0,
                  display_info = True, plot_info = True, plot_fit =False, save_file = False, x = 0, y = 0, z = 0):
 
-    #Initialize a dataframe to store the results of coef_matrix:
-    col1 = []
-    for j in np.arange(0,order):
-        for k in np.arange(0,j+1):
-                name = 'x%s y%s'% (j-k,k)
-                col1.append(name)
+    
 
     # initialuse the name of rows and columns
     ind = ['model_pow_%d'%i for i in np.arange(0,order)]
     col = ['power','mse', 'r2','bias', 'variance', 'mse_train']
     table_of_info = pd.DataFrame(index=ind, columns=col)
     
-    ind1 = ['Beta', 'lower confidence level','upper confidence level']
-    table_of_beta = pd.DataFrame(index=ind1, columns=col1)
+    # this is for naming the parameters in the table of parameters. commented out as not in use
+    '''col1 = ['Regression type', 'lambda']
+    for j in np.arange(0,order):
+        for k in np.arange(0,j+1):
+                name = 'x%s y%s'% (j-k,k)
+                col1.append(name)    
+    '''
+    #Initialize a dataframe to store the results of coef_matrix:
+    table_of_beta = pd.DataFrame(index=['beta', 'lower confidence level', 'upper confidence level'])
     
-    counter = 0
     #loop for creating fits for many orders
     for i in np.arange(0,order):
         #create fit object
@@ -158,11 +159,13 @@ def benchmarking( regressiontype, n = 500, order = 7, lam = 0.1, kfold = 0,
         #find the number of beta parameters and then put these parameters in a table with the confidence interval
         num_of_para = int((i+1)*(i+2)/2)
         #loop through each parameter
+        table_of_beta.loc[:,'regressiontype'] = regressiontype
+        table_of_beta.loc[:,'lamda'] = lam
         for m in np.arange(0, num_of_para):
-            table_of_beta.iloc[counter, m] = fit_object.par[m]
-            table_of_beta.iloc[counter+1, m] = conf_lower[m]
-            table_of_beta.iloc[counter+2, m] = conf_upper[m]
-        counter = counter + 3
+            table_of_beta.loc['beta',m] = fit_object.par[m]
+            table_of_beta.loc['lower confidence level', m] = conf_lower[m]
+            table_of_beta.loc['upper confidence level', m] = conf_upper[m]
+            
         
     if display_info:
         pd.options.display.float_format = '{:,.2g}'.format
@@ -183,8 +186,8 @@ def confidence_int(mean, var, kfold):
     This is a function which uses the mean of the betas and the variance to calculate the 95% confidence interval
     The outputs are the upper and lower confidence levels. 
     '''
-    conf_upper = 1.96 + mean * np.sqrt(var / kfold)
-    conf_lower = 1.96 - mean * np.sqrt(var / kfold)
+    conf_upper =  mean + (1.96 * np.sqrt(var / kfold))
+    conf_lower =  mean - (1.96 * np.sqrt(var / kfold))
     
     return conf_upper, conf_lower
     
