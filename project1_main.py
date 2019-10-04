@@ -20,16 +20,18 @@ def normalize(x,y,z, rescale = True):
 
 def main():
     
-    ks = [0, 5, 10]
-    lam = [10**(-5), 10**(-3), 10**(-1)]
+    ks = [5]
+    lam = [ 10**(-3), 10**(-1)]
 
-    max_order = 20
+    max_order = 3
     
     samples = 5*10**2
 
     toi = pd.DataFrame(columns = ['Regression type','lambda','kFold',
                                         'Complexity','Value', 'Metric'] )
-
+    
+    tob = pd.DataFrame()
+    
     ops = len(ks) * ( 2 * len(lam) + 1)
     one_part = 100 / ops #in%
     current_progress = 0
@@ -41,24 +43,26 @@ def main():
     for k in ks:
         current_progress += one_part
         print("Now: OLS; Progress", int(current_progress), "%")
-        temp = benchmarking('OLS', samples, max_order+1, kfold=k, plot_info= False, display_info = False)
+        temp, temp_tob = benchmarking('OLS', samples, max_order+1, kfold=k, plot_info= False, display_info = False)
         toi = toi_append(toi, temp, 'OLS', 0, k)
-
+        tob = tob.append(temp_tob)
+        
         for l in lam:
             current_progress += one_part
             print("Now: RIDGE; Progress", int(current_progress), "%")
-            temp = benchmarking('RIDGE', samples, max_order+1, lam=l, kfold= k, plot_info= False, display_info = False)
+            temp, temp_tob = benchmarking('RIDGE', samples, max_order+1, lam=l, kfold= k, plot_info= False, display_info = False)
             toi = toi_append(toi, temp, 'RIDGE', l, k)
-
+            tob = tob.append(temp_tob)
 
             current_progress += one_part
             print("Now: LASSO; Progress", int(current_progress), "%")
-
-            temp = benchmarking('LASSO', samples, max_order+1, lam=l, kfold= k, plot_info= False, display_info = False)
+            temp, temp_tob = benchmarking('LASSO', samples, max_order+1, lam=l, kfold= k, plot_info= False, display_info = False)
             toi = toi_append(toi, temp, 'LASSO', l, k)
-
+            tob = tob.append(temp_tob)
+            
     # plot results of benchmarking
     toi.to_csv('./Results/benchmarking.csv')
+    tob.to_csv('./Results/beta.csv')
     plotting(toi, folder='')
     
     reductions = [6, 36]
@@ -180,8 +184,8 @@ def main():
           
         plt.tight_layout()
         plt.savefig('./yellowstone1_%i_scale/fit.pdf'%red)
-
-
+    
+    
 if __name__ == "__main__":
     start = time.perf_counter()
     main()

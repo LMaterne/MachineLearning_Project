@@ -175,6 +175,7 @@ class Poly2DFit:
         self.r2 = 0
         self.variance = 0
         self. bias = 0
+        self.beta_mean = 0
 
         np.random.seed(0)
         np.random.shuffle(self.x)
@@ -229,9 +230,12 @@ class Poly2DFit:
             self.variance += var_temp/self.k
             #alternative implementaton
             # MSE = bias + variance + data_var <-> bias = MSE - varinace - data_var
-            #what is data var?
+            
             self.bias += (mse_temp - var_temp - np.var(self.datatrain))/self.k
-
+            
+            #find the mean beta of all individual beta 
+            self.beta_mean += (self.par)/self.k
+        
             #returning the  weighted MSE on training data
             return MSE_train/self.k
 
