@@ -36,7 +36,7 @@ def plotting_mse(toi, row, col, filename, split = False, ylabel ='MSE', shary = 
     if shary is True: shared y axes (only in split)
     """
     max_order = int(toi['Complexity'].max())
-    g = sns. FacetGrid(toi, row =row, col=col, hue ='Metric', margin_titles =True)
+    g = sns. FacetGrid(toi, col ='Regression type', row='kFold', hue ='Metric', margin_titles =True)
     g.map(plt.plot, 'Complexity', 'Value')
     g.add_legend()
     g.set_axis_labels('Polynom Order', ylabel)
@@ -106,17 +106,30 @@ def plotting(toi, folder = ''):
     book_filter = ((toi['Metric']=='MSE') | (toi['Metric']=='MSE_train')) &  ((toi['lambda'] == 0) | (toi['lambda'] == 0.00001)) & (toi['kFold'] != 0)
 
     #compare kfold for different regressions
-    plotting_mse(toi[lam_filter], col ='Regression type', row='kFold', filename = folder +'reg_types')
+    #plotting_mse(toi[lam_filter], col ='Regression type', row='kFold', filename = folder +'reg_types')
     #compare kfold and lambda for lasso
-    plotting_mse(toi[lasso_filter], col ='lambda', row='kFold', filename = folder +'lasso_lam_vs_kfold')
+    toi[lam_filter].to_csv('./Benchmark/toilam.csv')
+    #plotting_mse(toi[lasso_filter], col ='lambda', row='kFold', filename = folder +'lasso_lam_vs_kfold')
     #compare kfold and lambda fore ridge
-    plotting_mse(toi[ridge_filter], col ='lambda', row='kFold', filename = folder + 'ridge_lam_vs_kfold')
+    #plotting_mse(toi[ridge_filter], col ='lambda', row='kFold', filename = folder + 'ridge_lam_vs_kfold')
     #make r2 plot and split (no shared y)
-    plotting_r2(toi[r2_filter], filename = folder +'r2')
+    #plotting_r2(toi[r2_filter], filename = folder +'r2')
     #make plot from book
-    plotting_mse(toi[book_filter], col='Regression type', row='kFold', filename=folder +'train_vs_test', split = True, shary=True)
-    plotting_mse(toi[book_filter], col ='Regression type', row='kFold', filename=folder +'train_vs_test_no_share', split = True, shary=False)
+    #plotting_mse(toi[book_filter], col='Regression type', row='kFold', filename=folder +'train_vs_test', split = False, shary=True)
+    #plotting_mse(toi[book_filter], col ='Regression type', row='kFold', filename=folder +'train_vs_test_no_share', split = False, shary=False)
     
+    plotting_heatmap (toi, folder)
+    
+def plotting_heatmap(toi, folder):
+    
+    heat_filter = (toi['Regression type'] == 'RIDGE') & ((toi['Metric'] != 'R2') & (toi['Metric'] != 'MSE_train') & (toi['Metric'] != 'Bias') & (toi['Metric'] != 'Variance'))
+    heat_info = toi[heat_filter]
+    heat_info.to_csv('./Benchmark/heatmap.csv')
+    heatmap_info = pd.pivot_table(heat_info, values=['Value'],
+                              index = ['lambda'],
+                              columns = ['Complexity'])
+    
+    sns.heatmap(heatmap_info, annot=True, fmt=".1f")
 
 def plot_stats(info, title = 'Regression Infos'):
     data = pd.DataFrame(columns = ['Complexity','Value', 'Metric'] )

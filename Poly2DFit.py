@@ -260,7 +260,7 @@ class Poly2DFit:
         self.x, self.y = np.random.rand(2,n)
 
         #pass the x and y data into the Franke function this will be used later in evaluating the model
-        self.data = FrankeFunction(self.x, self.y) + np.sqrt(var)*np.random.randn(n) + mean
+        self.data = FrankeFunction(self.x, self.y) + np.sqrt(var) + mean #*np.random.randn(n) + mean
 
     def plot_function(self):
         """

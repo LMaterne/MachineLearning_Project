@@ -166,5 +166,5 @@ def benchmarking( regressiontype, n = 500, order = 7, lam = 0.1, kfold = 0,
             title += ' $\lambda$ = %.2f' % lam
         plot_stats(table_of_info,title )
 
-    return table_of_info
+    return table_of_info, coef_matrix
 
