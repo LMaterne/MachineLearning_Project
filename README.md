@@ -3,7 +3,7 @@
 FYS-4155
 Project by James Claxton, Lukas Materne and Lasse Steinnes
 
-The repository is a Machine Learning algorithm, specifically running Ordinary Least Squares, Ridge and LASSO regression.
+This repository is a Machine Learning algorithm, specifically running Ordinary Least Squares, Ridge and LASSO regression.
 
 The 'project1_main.py' file is when the script is run from'
 
