@@ -15,6 +15,8 @@ The 'project1_main.py' file is where the script is run from.
 
 'functions_test.py' is a file for running testing.
 
+'plotting_heatmaps.py' is a file for plotting heatmaps (this is manually executed after the main script)
+
 The folder 'Results' contains the data and plots from the models of the Franke Function.
 
 Folder 'Terrain data' contains the orginal images tif files which are to modelled.
